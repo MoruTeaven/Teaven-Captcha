@@ -1,0 +1,1479 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Teaven Captcha 管理后台</title>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --surface: rgba(255, 255, 255, 0.84);
+      --surface-solid: #ffffff;
+      --surface-muted: #f1f3f5;
+      --surface-hover: #f8fafc;
+      --border: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.14);
+      --text: #111827;
+      --text-muted: #6b7280;
+      --text-soft: #9ca3af;
+      --accent: #0f9f7a;
+      --accent-weak: rgba(15, 159, 122, 0.1);
+      --accent-soft: rgba(15, 159, 122, 0.16);
+      --success: #12a150;
+      --success-bg: rgba(18, 161, 80, 0.1);
+      --warning: #b7791f;
+      --warning-bg: rgba(183, 121, 31, 0.12);
+      --error: #d92d20;
+      --error-bg: rgba(217, 45, 32, 0.1);
+      --info: #2563eb;
+      --info-bg: rgba(37, 99, 235, 0.1);
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.06);
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 11px;
+      --sidebar-width: 280px;
+      --sidebar-collapsed: 86px;
+      --topbar-height: 72px;
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg: #090d12;
+      --surface: rgba(17, 24, 39, 0.78);
+      --surface-solid: #101720;
+      --surface-muted: #151d29;
+      --surface-hover: #172131;
+      --border: rgba(226, 232, 240, 0.1);
+      --border-strong: rgba(226, 232, 240, 0.16);
+      --text: #f8fafc;
+      --text-muted: #a1aab8;
+      --text-soft: #6b7280;
+      --accent: #21c69a;
+      --accent-weak: rgba(33, 198, 154, 0.12);
+      --accent-soft: rgba(33, 198, 154, 0.18);
+      --success: #3ddc84;
+      --success-bg: rgba(61, 220, 132, 0.13);
+      --warning: #f5b84b;
+      --warning-bg: rgba(245, 184, 75, 0.14);
+      --error: #ff6b61;
+      --error-bg: rgba(255, 107, 97, 0.13);
+      --info: #75a7ff;
+      --info-bg: rgba(117, 167, 255, 0.14);
+      --shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+      --shadow-soft: 0 14px 38px rgba(0, 0, 0, 0.24);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 8%, var(--accent-weak), transparent 28rem),
+        radial-gradient(circle at 86% 12%, rgba(15, 23, 42, 0.05), transparent 22rem),
+        var(--bg);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      transition: background 0.28s ease, color 0.28s ease;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button { cursor: pointer; }
+
+    a { color: inherit; text-decoration: none; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-height: 100vh;
+      transition: grid-template-columns 0.24s ease;
+    }
+
+    .app-shell.is-collapsed { grid-template-columns: var(--sidebar-collapsed) minmax(0, 1fr); }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: 100vh;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      transition: width 0.24s ease, transform 0.24s ease, background 0.28s ease;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 42px;
+      padding: 0 8px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      background: linear-gradient(135deg, #111827, #0f9f7a);
+      box-shadow: 0 14px 28px rgba(15, 159, 122, 0.24);
+      flex: 0 0 auto;
+    }
+
+    [data-theme="dark"] .brand-mark { background: linear-gradient(135deg, #182230, #21c69a); }
+
+    .brand-title {
+      font-size: 17px;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+
+    .brand-subtitle {
+      margin-top: 3px;
+      color: var(--text-muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sidebar-section-label {
+      padding: 10px 10px 2px;
+      color: var(--text-soft);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .nav-link {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 42px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 13px;
+      color: var(--text-muted);
+      background: transparent;
+      text-align: left;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .nav-link i { font-size: 18px; flex: 0 0 20px; text-align: center; }
+
+    .nav-link span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .nav-link:hover { background: var(--surface-hover); color: var(--text); }
+
+    .nav-link.is-active {
+      background: var(--accent-weak);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .sidebar-card {
+      margin-top: auto;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-solid);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .sidebar-card .eyebrow { color: var(--text-muted); font-size: 12px; }
+
+    .sidebar-card strong { display: block; margin-top: 5px; font-size: 15px; }
+
+    .sidebar-card .mini-line {
+      height: 5px;
+      margin-top: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent) 76%, var(--surface-muted) 76%);
+    }
+
+    .app-shell.is-collapsed .brand-copy,
+    .app-shell.is-collapsed .nav-link span,
+    .app-shell.is-collapsed .sidebar-section-label,
+    .app-shell.is-collapsed .sidebar-card { display: none; }
+
+    .app-shell.is-collapsed .sidebar { padding-inline: 14px; }
+
+    .app-shell.is-collapsed .nav-link { justify-content: center; padding-inline: 0; }
+
+    .content-shell { min-width: 0; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: var(--topbar-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg) 84%, transparent);
+      backdrop-filter: blur(18px);
+      transition: background 0.28s ease;
+    }
+
+    .topbar-left, .topbar-actions { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+    .icon-button {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--text-muted);
+      background: var(--surface-solid);
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    .icon-button:hover { color: var(--text); border-color: var(--border-strong); transform: translateY(-1px); }
+
+    .mobile-menu-button { display: none; }
+
+    .search-box {
+      width: min(420px, 32vw);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 13px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: var(--surface-solid);
+      color: var(--text-muted);
+    }
+
+    .search-box input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      min-width: 0;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-solid);
+      color: var(--text-muted);
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 0 4px var(--success-bg);
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      background: #111827;
+    }
+
+    [data-theme="dark"] .avatar { background: #253244; }
+
+    main {
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      padding: 24px 28px 36px;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: clamp(24px, 2.2vw, 34px);
+      line-height: 1.12;
+      letter-spacing: -0.04em;
+      font-weight: 900;
+    }
+
+    .page-subtitle {
+      max-width: 760px;
+      margin: 8px 0 0;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .header-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+
+    .button {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0 14px;
+      color: var(--text);
+      background: var(--surface-solid);
+      font-weight: 700;
+      transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .button:hover { transform: translateY(-1px); border-color: var(--border-strong); }
+
+    .button.primary { color: #fff; background: var(--accent); border-color: transparent; }
+
+    .button.ghost { background: transparent; }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+      transition: background 0.28s ease, border-color 0.28s ease, transform 0.18s ease;
+    }
+
+    .card:hover { border-color: var(--border-strong); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 18px 0;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+    }
+
+    .card-kicker {
+      margin-top: 3px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .card-body { padding: 18px; }
+
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .metric-card { min-height: 156px; }
+
+    .metric-top { display: flex; justify-content: space-between; gap: 12px; }
+
+    .metric-icon {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: var(--accent);
+      background: var(--accent-weak);
+      flex: 0 0 auto;
+    }
+
+    .metric-label { color: var(--text-muted); font-size: 13px; }
+
+    .metric-value {
+      margin-top: 10px;
+      font-size: clamp(26px, 2.5vw, 35px);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 18px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .trend { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; color: var(--success); }
+    .trend.down { color: var(--error); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .badge.success { color: var(--success); background: var(--success-bg); }
+    .badge.warning { color: var(--warning); background: var(--warning-bg); }
+    .badge.error { color: var(--error); background: var(--error-bg); }
+    .badge.info { color: var(--info); background: var(--info-bg); }
+    .badge.neutral { color: var(--text-muted); background: var(--surface-muted); }
+
+    .chart-wrap { height: 292px; display: flex; flex-direction: column; gap: 14px; }
+
+    .chart-legend { display: flex; flex-wrap: wrap; gap: 12px; color: var(--text-muted); font-size: 12px; }
+
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+
+    .legend-swatch { width: 10px; height: 10px; border-radius: 999px; background: var(--accent); }
+
+    .legend-swatch.muted { background: var(--text-soft); }
+
+    .line-chart {
+      width: 100%;
+      flex: 1;
+      min-height: 210px;
+    }
+
+    .chart-grid-line { stroke: var(--border); stroke-width: 1; }
+    .chart-axis-text { fill: var(--text-soft); font-size: 11px; }
+    .chart-line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-area { fill: var(--accent-weak); }
+    .chart-line-muted { fill: none; stroke: var(--text-soft); stroke-width: 2; stroke-dasharray: 4 6; }
+
+    .donut-layout { display: grid; grid-template-columns: 170px minmax(0, 1fr); align-items: center; gap: 18px; }
+
+    .donut {
+      width: 164px;
+      height: 164px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--accent) 0 61%, var(--success) 61% 82%, var(--warning) 82% 93%, var(--error) 93% 100%);
+      position: relative;
+    }
+
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 20px;
+      border-radius: 999px;
+      background: var(--surface-solid);
+    }
+
+    .donut-center { position: relative; z-index: 1; text-align: center; }
+    .donut-center strong { display: block; font-size: 30px; letter-spacing: -0.05em; }
+    .donut-center span { color: var(--text-muted); font-size: 12px; }
+
+    .channel-list, .activity-list, .timeline { display: flex; flex-direction: column; gap: 12px; }
+
+    .channel-item, .activity-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: color-mix(in srgb, var(--surface-solid) 72%, transparent);
+    }
+
+    .item-main { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .item-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--surface-muted);
+      color: var(--text-muted);
+      flex: 0 0 auto;
+    }
+    .item-title { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-meta { margin-top: 3px; color: var(--text-muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .progress-line { width: 100%; height: 7px; border-radius: 999px; background: var(--surface-muted); overflow: hidden; }
+    .progress-line span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+
+    .tabs { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface-muted); }
+    .tab-button {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 11px;
+      color: var(--text-muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .tab-button.is-active { color: var(--text); background: var(--surface-solid); box-shadow: var(--shadow-soft); }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .field-shell {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-solid);
+      color: var(--text-muted);
+    }
+
+    .field-shell input, .field-shell select {
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      min-width: 130px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 920px;
+    }
+
+    th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    th {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      background: color-mix(in srgb, var(--surface-muted) 72%, transparent);
+      user-select: none;
+    }
+    th.sortable { cursor: pointer; }
+    td { color: var(--text); }
+    tbody tr:hover { background: color-mix(in srgb, var(--accent-weak) 32%, transparent); }
+    .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 12px; color: var(--text-muted); }
+    .checkbox { width: 16px; height: 16px; accent-color: var(--accent); }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      color: var(--text-muted);
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .page-buttons { display: flex; align-items: center; gap: 6px; }
+    .page-btn {
+      min-width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-solid);
+      color: var(--text-muted);
+      font-weight: 800;
+    }
+    .page-btn.is-active { background: var(--accent); border-color: transparent; color: #fff; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .form-field { display: flex; flex-direction: column; gap: 7px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { font-weight: 800; font-size: 13px; }
+    .required { color: var(--error); }
+    .help { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+    .error-text { color: var(--error); font-size: 12px; }
+    .control {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0 12px;
+      outline: none;
+      color: var(--text);
+      background: var(--surface-solid);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    textarea.control { min-height: 84px; padding-block: 10px; resize: vertical; }
+    .control:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-weak); }
+    .control.is-invalid { border-color: var(--error); box-shadow: 0 0 0 4px var(--error-bg); }
+    .option-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .option-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-solid);
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .option-pill input { accent-color: var(--accent); }
+
+    .switch { position: relative; width: 42px; height: 24px; display: inline-block; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch span {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      transition: background 0.18s ease;
+    }
+    .switch span::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 2px;
+      top: 2px;
+      border-radius: 999px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
+      transition: transform 0.18s ease;
+    }
+    .switch input:checked + span { background: var(--accent); }
+    .switch input:checked + span::before { transform: translateX(18px); }
+
+    .timeline-item { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; }
+    .timeline-dot { width: 10px; height: 10px; margin-top: 5px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 5px var(--accent-weak); }
+    .timeline-content { padding-bottom: 13px; border-bottom: 1px solid var(--border); }
+    .timeline-title { font-weight: 800; }
+    .timeline-meta { margin-top: 4px; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+
+    .empty-state {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px 16px;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--surface-muted) 54%, transparent);
+    }
+    .empty-illustration { width: 112px; height: 80px; margin-bottom: 10px; }
+    .empty-state strong { display: block; font-size: 15px; }
+    .empty-state p { margin: 5px 0 0; color: var(--text-muted); font-size: 12px; line-height: 1.6; }
+
+    .drawer-backdrop, .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      display: none;
+      background: rgba(2, 6, 23, 0.44);
+      backdrop-filter: blur(6px);
+    }
+    .drawer-backdrop.is-open, .modal-backdrop.is-open { display: block; }
+
+    .drawer {
+      position: fixed;
+      right: 0;
+      top: 0;
+      z-index: 80;
+      width: min(480px, 92vw);
+      height: 100vh;
+      transform: translateX(105%);
+      transition: transform 0.24s ease;
+      border-left: 1px solid var(--border);
+      background: var(--surface-solid);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .drawer.is-open { transform: translateX(0); }
+    .drawer-header, .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px; border-bottom: 1px solid var(--border); }
+    .drawer-title, .modal-title { margin: 0; font-size: 18px; font-weight: 900; letter-spacing: -0.03em; }
+    .drawer-body { padding: 18px; overflow: auto; }
+
+    .modal {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 85;
+      width: min(560px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      display: none;
+      transform: translate(-50%, -50%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface-solid);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .modal.is-open { display: block; }
+    .modal-body { padding: 18px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 18px; border-top: 1px solid var(--border); }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 280px;
+      max-width: calc(100vw - 44px);
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: var(--surface-solid);
+      box-shadow: var(--shadow);
+      transform: translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .toast.is-visible { transform: translateY(0); opacity: 1; }
+    .toast i { color: var(--success); font-size: 18px; }
+    .toast strong { display: block; font-size: 13px; }
+    .toast span { display: block; margin-top: 2px; color: var(--text-muted); font-size: 12px; }
+
+    .tooltip {
+      position: relative;
+    }
+    .tooltip::after {
+      content: attr(data-tip);
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      width: max-content;
+      max-width: 220px;
+      padding: 7px 9px;
+      border-radius: 9px;
+      color: #fff;
+      background: #111827;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+    .tooltip:hover::after { opacity: 1; transform: translateY(0); }
+
+    footer { margin-top: 24px; color: var(--text-muted); font-size: 12px; text-align: center; }
+
+    .mobile-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 25;
+      display: none;
+      background: rgba(2, 6, 23, 0.38);
+      backdrop-filter: blur(4px);
+    }
+    .mobile-overlay.is-open { display: block; }
+
+    @media (max-width: 1180px) {
+      .span-3 { grid-column: span 6; }
+      .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+      .search-box { width: 260px; }
+    }
+
+    @media (max-width: 860px) {
+      .app-shell, .app-shell.is-collapsed { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: min(310px, 86vw);
+        transform: translateX(-105%);
+        box-shadow: var(--shadow);
+      }
+      .sidebar.is-open { transform: translateX(0); }
+      .app-shell.is-collapsed .brand-copy,
+      .app-shell.is-collapsed .nav-link span,
+      .app-shell.is-collapsed .sidebar-section-label,
+      .app-shell.is-collapsed .sidebar-card { display: block; }
+      .app-shell.is-collapsed .nav-link { justify-content: flex-start; padding-inline: 10px; }
+      .desktop-toggle { display: none; }
+      .mobile-menu-button { display: grid; }
+      .topbar { padding: 0 16px; }
+      .search-box { display: none; }
+      .status-pill { display: none; }
+      main { padding: 20px 16px 28px; }
+      .page-header { flex-direction: column; }
+      .header-actions { width: 100%; justify-content: flex-start; }
+      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 { grid-column: span 12; }
+      .donut-layout { grid-template-columns: 1fr; justify-items: center; }
+      .form-grid { grid-template-columns: 1fr; }
+      .toolbar { align-items: stretch; }
+      .toolbar-left, .toolbar-right { width: 100%; }
+      .field-shell { width: 100%; }
+      .field-shell input, .field-shell select { width: 100%; }
+    }
+
+    @media (max-width: 560px) {
+      .topbar-actions .tooltip, .topbar-actions .status-pill { display: none; }
+      .button { width: 100%; }
+      .header-actions .button { flex: 1 1 100%; }
+      .metric-card { min-height: 140px; }
+      .card-header { align-items: flex-start; flex-direction: column; }
+      .tabs { overflow-x: auto; width: 100%; }
+      .tab-button { white-space: nowrap; }
+      .pagination { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-overlay" id="mobileOverlay"></div>
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar" id="sidebar" aria-label="主导航">
+      <div class="brand">
+        <div class="brand-mark"><i class="ri-shield-check-line" aria-hidden="true"></i></div>
+        <div class="brand-copy">
+          <div class="brand-title">Teaven Captcha</div>
+          <div class="brand-subtitle">Admin Console</div>
+        </div>
+      </div>
+
+      <nav>
+        <div class="sidebar-section-label">Platform</div>
+        <ul class="nav-list">
+          <li><button class="nav-link is-active" type="button"><i class="ri-dashboard-line"></i><span>仪表盘</span></button></li>
+          <li><button class="nav-link" type="button"><i class="ri-route-line"></i><span>渠道与路由</span></button></li>
+          <li><button class="nav-link" type="button"><i class="ri-apps-2-line"></i><span>应用管理</span></button></li>
+          <li><button class="nav-link" type="button"><i class="ri-user-settings-line"></i><span>用户管理</span></button></li>
+          <li><button class="nav-link" type="button"><i class="ri-bar-chart-2-line"></i><span>数据分析</span></button></li>
+        </ul>
+
+        <div class="sidebar-section-label">Operation</div>
+        <ul class="nav-list">
+          <li><button class="nav-link" type="button"><i class="ri-file-list-3-line"></i><span>调用日志</span></button></li>
+          <li><button class="nav-link" type="button"><i class="ri-shield-keyhole-line"></i><span>审计日志</span></button></li>
+          <li><button class="nav-link" type="button"><i class="ri-equalizer-line"></i><span>系统设置</span></button></li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-card">
+        <div class="eyebrow">SLA Usage</div>
+        <strong>本月可用性 99.94%</strong>
+        <div class="mini-line" aria-hidden="true"></div>
+      </div>
+    </aside>
+
+    <div class="content-shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button mobile-menu-button" id="mobileMenuButton" type="button" aria-label="打开导航"><i class="ri-menu-line"></i></button>
+          <button class="icon-button desktop-toggle" id="collapseButton" type="button" aria-label="折叠菜单"><i class="ri-sidebar-fold-line"></i></button>
+          <label class="search-box" aria-label="全局搜索">
+            <i class="ri-search-line" aria-hidden="true"></i>
+            <input type="search" placeholder="搜索用户、应用、渠道或错误码">
+          </label>
+        </div>
+        <div class="topbar-actions">
+          <span class="status-pill"><span class="status-dot"></span>API 正常 · 18ms</span>
+          <button class="icon-button tooltip" data-tip="切换深浅色模式" id="themeButton" type="button" aria-label="切换主题"><i class="ri-sun-line"></i></button>
+          <button class="icon-button tooltip" data-tip="系统通知" type="button" aria-label="系统通知"><i class="ri-notification-3-line"></i></button>
+          <div class="avatar" aria-label="管理员">AD</div>
+        </div>
+      </header>
+
+      <main>
+        <div class="breadcrumb" aria-label="面包屑导航">
+          <span>管理后台</span><i class="ri-arrow-right-s-line"></i><strong>仪表盘</strong>
+        </div>
+
+        <section class="page-header">
+          <div>
+            <h1 class="page-title">验证码服务运行概览</h1>
+            <p class="page-subtitle">实时掌握 Teaven Captcha 全平台调用量、成功率、渠道状态与异常趋势，确保每一次人机验证稳定完成。</p>
+          </div>
+          <div class="header-actions">
+            <button class="button ghost" id="openDrawerButton" type="button"><i class="ri-filter-3-line"></i>高级筛选</button>
+            <button class="button" id="openModalButton" type="button"><i class="ri-add-line"></i>新增渠道</button>
+            <button class="button primary" id="exportButton" type="button"><i class="ri-download-line"></i>导出报告</button>
+          </div>
+        </section>
+
+        <section class="dashboard-grid" aria-label="核心指标">
+          <article class="card metric-card span-3">
+            <div class="card-body">
+              <div class="metric-top">
+                <div>
+                  <div class="metric-label">今日调用量</div>
+                  <div class="metric-value">128.6K</div>
+                </div>
+                <div class="metric-icon"><i class="ri-pulse-line"></i></div>
+              </div>
+              <div class="metric-footer"><span class="trend"><i class="ri-arrow-up-line"></i>12.8%</span><span>Compared with yesterday</span></div>
+            </div>
+          </article>
+
+          <article class="card metric-card span-3">
+            <div class="card-body">
+              <div class="metric-top">
+                <div>
+                  <div class="metric-label">今日成功率</div>
+                  <div class="metric-value">98.72%</div>
+                </div>
+                <div class="metric-icon"><i class="ri-check-double-line"></i></div>
+              </div>
+              <div class="metric-footer"><span class="trend"><i class="ri-arrow-up-line"></i>0.31%</span><span>Success Rate</span></div>
+            </div>
+          </article>
+
+          <article class="card metric-card span-3">
+            <div class="card-body">
+              <div class="metric-top">
+                <div>
+                  <div class="metric-label">平均验证耗时</div>
+                  <div class="metric-value">186ms</div>
+                </div>
+                <div class="metric-icon"><i class="ri-timer-flash-line"></i></div>
+              </div>
+              <div class="metric-footer"><span class="trend down"><i class="ri-arrow-down-line"></i>24ms</span><span>Latency</span></div>
+            </div>
+          </article>
+
+          <article class="card metric-card span-3">
+            <div class="card-body">
+              <div class="metric-top">
+                <div>
+                  <div class="metric-label">活跃应用数</div>
+                  <div class="metric-value">342</div>
+                </div>
+                <div class="metric-icon"><i class="ri-global-line"></i></div>
+              </div>
+              <div class="metric-footer"><span class="trend"><i class="ri-arrow-up-line"></i>18</span><span>Active Apps</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid" style="margin-top: 16px;" aria-label="图表与渠道状态">
+          <article class="card span-8">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">调用趋势</h2>
+                <div class="card-kicker">Requests, failures and latency in last 24 hours</div>
+              </div>
+              <div class="tabs" role="tablist" aria-label="趋势周期">
+                <button class="tab-button is-active" type="button">24 小时</button>
+                <button class="tab-button" type="button">7 天</button>
+                <button class="tab-button" type="button">30 天</button>
+              </div>
+            </div>
+            <div class="card-body chart-wrap">
+              <div class="chart-legend">
+                <span class="legend-item"><span class="legend-swatch"></span>验证请求</span>
+                <span class="legend-item"><span class="legend-swatch muted"></span>失败趋势</span>
+              </div>
+              <svg class="line-chart" viewBox="0 0 760 260" role="img" aria-label="最近 24 小时调用趋势图">
+                <path class="chart-grid-line" d="M48 30H735M48 80H735M48 130H735M48 180H735M48 230H735"></path>
+                <text class="chart-axis-text" x="10" y="34">120K</text>
+                <text class="chart-axis-text" x="16" y="84">90K</text>
+                <text class="chart-axis-text" x="16" y="134">60K</text>
+                <text class="chart-axis-text" x="16" y="184">30K</text>
+                <text class="chart-axis-text" x="26" y="234">0</text>
+                <path class="chart-area" d="M48 204 C92 196 103 170 139 162 C182 152 206 185 245 152 C286 116 327 126 366 98 C409 68 451 102 491 76 C536 47 574 68 613 54 C664 36 698 44 735 31 L735 230 L48 230 Z"></path>
+                <path class="chart-line" d="M48 204 C92 196 103 170 139 162 C182 152 206 185 245 152 C286 116 327 126 366 98 C409 68 451 102 491 76 C536 47 574 68 613 54 C664 36 698 44 735 31"></path>
+                <path class="chart-line-muted" d="M48 216 C94 204 118 213 154 206 C204 196 238 203 276 190 C328 172 356 188 398 174 C444 160 486 164 528 151 C590 137 645 149 735 126"></path>
+                <text class="chart-axis-text" x="48" y="252">00:00</text>
+                <text class="chart-axis-text" x="238" y="252">08:00</text>
+                <text class="chart-axis-text" x="426" y="252">16:00</text>
+                <text class="chart-axis-text" x="690" y="252">Now</text>
+              </svg>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">渠道分布</h2>
+                <div class="card-kicker">Provider routing share</div>
+              </div>
+              <span class="badge success">正常</span>
+            </div>
+            <div class="card-body donut-layout">
+              <div class="donut" aria-label="渠道分布环形图"><div class="donut-center"><strong>4</strong><span>可用渠道</span></div></div>
+              <div class="channel-list">
+                <div class="channel-item"><div><div class="item-title">Turnstile</div><div class="item-meta">海外默认渠道 · 61%</div></div><span class="badge success">Active</span></div>
+                <div class="channel-item"><div><div class="item-title">Geetest v4</div><div class="item-meta">中国大陆优先 · 21%</div></div><span class="badge success">Active</span></div>
+                <div class="channel-item"><div><div class="item-title">reCAPTCHA</div><div class="item-meta">备用渠道 · 11%</div></div><span class="badge warning">Slow</span></div>
+                <div class="channel-item"><div><div class="item-title">hCaptcha</div><div class="item-meta">预留备用 · 7%</div></div><span class="badge neutral">Standby</span></div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid" style="margin-top: 16px;" aria-label="渠道与操作">
+          <article class="card span-7">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">上游渠道状态</h2>
+                <div class="card-kicker">Channel health, weight and priority</div>
+              </div>
+              <button class="button ghost" type="button"><i class="ri-refresh-line"></i>刷新</button>
+            </div>
+            <div class="card-body channel-list">
+              <div class="channel-item">
+                <div class="item-main"><div class="item-icon"><i class="ri-cloud-line"></i></div><div><div class="item-title">Cloudflare Turnstile</div><div class="item-meta">权重 100 · 优先级 100 · 超时 5000ms</div></div></div>
+                <div style="min-width: 150px;"><div class="progress-line"><span style="width: 96%;"></span></div><div class="item-meta">成功率 99.21%</div></div>
+              </div>
+              <div class="channel-item">
+                <div class="item-main"><div class="item-icon"><i class="ri-fingerprint-line"></i></div><div><div class="item-title">Geetest v4</div><div class="item-meta">CN 路由优先 · captcha_id 已配置</div></div></div>
+                <div style="min-width: 150px;"><div class="progress-line"><span style="width: 94%;"></span></div><div class="item-meta">成功率 97.88%</div></div>
+              </div>
+              <div class="channel-item">
+                <div class="item-main"><div class="item-icon"><i class="ri-google-line"></i></div><div><div class="item-title">Google reCAPTCHA</div><div class="item-meta">备用渠道 · 国内网络延迟偏高</div></div></div>
+                <span class="badge warning">延迟较高</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card span-5">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">最近操作</h2>
+                <div class="card-kicker">Audit timeline</div>
+              </div>
+              <span class="badge info">Live</span>
+            </div>
+            <div class="card-body timeline">
+              <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-title">管理员启用 Geetest v4 渠道</div><div class="timeline-meta">2 分钟前 · admin@example.com · route_strategy: geo_country</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-title">应用 My Website 重置 secret_key</div><div class="timeline-meta">18 分钟前 · secret_key 仅展示一次 · 已写入审计日志</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-title">reCAPTCHA 渠道测试超时</div><div class="timeline-meta">35 分钟前 · verify_timeout · 平均耗时 4280ms</div></div></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="card span-12" style="margin-top: 16px;" aria-label="应用与调用管理">
+          <div class="toolbar">
+            <div>
+              <h2 class="card-title">应用管理</h2>
+              <div class="card-kicker">Applications, domains, status and verification logs</div>
+            </div>
+            <div class="toolbar-right">
+              <button class="button ghost" type="button"><i class="ri-checkbox-multiple-line"></i>批量操作</button>
+              <button class="button primary" type="button"><i class="ri-add-line"></i>创建应用</button>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <label class="field-shell"><i class="ri-search-line"></i><input id="tableSearch" type="search" placeholder="搜索应用、用户或域名"></label>
+              <label class="field-shell"><i class="ri-filter-2-line"></i><select id="statusFilter"><option value="all">全部状态</option><option value="active">正常</option><option value="warning">异常</option><option value="disabled">已禁用</option></select></label>
+            </div>
+            <div class="toolbar-right">
+              <label class="field-shell"><i class="ri-calendar-line"></i><input type="date" value="2026-06-20"></label>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><input class="checkbox" type="checkbox" aria-label="全选"></th>
+                  <th class="sortable" data-sort="name">应用 <i class="ri-arrow-up-down-line"></i></th>
+                  <th>所属用户</th>
+                  <th>允许域名</th>
+                  <th class="sortable" data-sort="calls">今日调用 <i class="ri-arrow-up-down-line"></i></th>
+                  <th>成功率</th>
+                  <th>路由策略</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="appTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <span id="pageSummary">显示 1-5，共 5 个应用</span>
+            <div class="page-buttons">
+              <button class="page-btn" type="button"><i class="ri-arrow-left-s-line"></i></button>
+              <button class="page-btn is-active" type="button">1</button>
+              <button class="page-btn" type="button">2</button>
+              <button class="page-btn" type="button"><i class="ri-arrow-right-s-line"></i></button>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-grid" style="margin-top: 16px;" aria-label="系统设置与空状态">
+          <article class="card span-8">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">系统策略配置</h2>
+                <div class="card-kicker">Default route, rate limit and log retention</div>
+              </div>
+              <span class="badge info">Draft</span>
+            </div>
+            <div class="card-body">
+              <form class="form-grid" id="settingsForm" novalidate>
+                <div class="form-field">
+                  <label for="defaultProvider">默认上游渠道 <span class="required">*</span></label>
+                  <select class="control" id="defaultProvider" required>
+                    <option>Cloudflare Turnstile</option>
+                    <option>Geetest v4</option>
+                    <option>Google reCAPTCHA</option>
+                  </select>
+                  <div class="help">当应用未指定渠道时使用。</div>
+                </div>
+                <div class="form-field">
+                  <label for="timeout">上游超时时间 <span class="required">*</span></label>
+                  <input class="control" id="timeout" type="number" value="5000" min="1000" max="10000" required>
+                  <div class="help">建议控制在 3000 到 5000ms。</div>
+                </div>
+                <div class="form-field full">
+                  <label>路由策略</label>
+                  <div class="option-row">
+                    <label class="option-pill"><input type="radio" name="route" checked> 按国家路由</label>
+                    <label class="option-pill"><input type="radio" name="route"> 固定渠道</label>
+                    <label class="option-pill"><input type="radio" name="route"> 权重随机</label>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label for="retention">日志保留至</label>
+                  <input class="control" id="retention" type="date" value="2026-07-20">
+                </div>
+                <div class="form-field">
+                  <label for="quota">默认每日配额</label>
+                  <input class="control is-invalid" id="quota" type="number" value="0">
+                  <div class="error-text">配额必须大于 0，留空表示不限制。</div>
+                </div>
+                <div class="form-field full">
+                  <label>安全选项</label>
+                  <div class="option-row">
+                    <label class="option-pill"><input type="checkbox" checked> 校验 Origin / Referer</label>
+                    <label class="option-pill"><input type="checkbox" checked> IP 哈希存储</label>
+                    <label class="option-pill"><input type="checkbox"> 自动禁用异常应用</label>
+                  </div>
+                </div>
+                <div class="form-field full">
+                  <label for="note">内部备注</label>
+                  <textarea class="control" id="note" placeholder="例如：CN -> Geetest，其他国家优先 Turnstile，缺失时自动回退可用渠道。"></textarea>
+                </div>
+                <div class="form-field full" style="align-items: flex-start;">
+                  <label style="display: inline-flex; align-items: center; gap: 10px;"><span>启用故障降级</span><span class="switch"><input type="checkbox" checked><span></span></span></label>
+                  <div class="help">当渠道连续失败或超时时，临时切换至备用渠道。</div>
+                </div>
+                <div class="form-field full" style="flex-direction: row; justify-content: flex-end;">
+                  <button class="button ghost" type="reset">重置</button>
+                  <button class="button primary" type="submit">保存配置</button>
+                </div>
+              </form>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">工单中心</h2>
+                <div class="card-kicker">Support queue</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="empty-state">
+                <svg class="empty-illustration" viewBox="0 0 150 110" role="img" aria-label="空状态插图">
+                  <rect x="18" y="24" width="114" height="70" rx="18" fill="none" stroke="currentColor" stroke-width="2" opacity="0.24"></rect>
+                  <path d="M42 55h66M42 72h42" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.36"></path>
+                  <circle cx="113" cy="35" r="15" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"></circle>
+                  <path d="M107 35l4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.62"></path>
+                </svg>
+                <strong>暂无待处理工单</strong>
+                <p>用户接入、渠道异常和账务问题会集中出现在这里。</p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <footer>Teaven Captcha Admin Console · Cloudflare Workers + D1 · Mock Data Preview</footer>
+      </main>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="filterDrawer" aria-label="高级筛选抽屉">
+    <div class="drawer-header">
+      <h2 class="drawer-title">高级筛选</h2>
+      <button class="icon-button" id="closeDrawerButton" type="button" aria-label="关闭抽屉"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="drawer-body">
+      <form class="form-grid">
+        <div class="form-field full"><label>时间范围</label><input class="control" type="date" value="2026-06-20"></div>
+        <div class="form-field full"><label>渠道</label><select class="control"><option>全部渠道</option><option>Turnstile</option><option>Geetest</option><option>reCAPTCHA</option></select></div>
+        <div class="form-field full"><label>错误码</label><input class="control" type="text" placeholder="invalid_token / verify_timeout"></div>
+        <div class="form-field full"><label>只看异常</label><span class="switch"><input type="checkbox" checked><span></span></span></div>
+        <button class="button primary" type="button" id="applyFilterButton">应用筛选</button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <section class="modal" id="channelModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">新增上游渠道</h2>
+      <button class="icon-button" id="closeModalButton" type="button" aria-label="关闭弹窗"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <form class="form-grid">
+        <div class="form-field"><label>渠道类型 <span class="required">*</span></label><select class="control"><option>Cloudflare Turnstile</option><option>Geetest v4</option><option>Google reCAPTCHA</option><option>hCaptcha</option></select></div>
+        <div class="form-field"><label>显示名称 <span class="required">*</span></label><input class="control" value="Cloudflare Turnstile"></div>
+        <div class="form-field full"><label>Public Key <span class="required">*</span></label><input class="control mono" value="0x4AAAA..."></div>
+        <div class="form-field full"><label>Secret Config <span class="required">*</span></label><textarea class="control mono">{"secret_key":"0x4AAAA..."}</textarea><div class="help">密钥将由 Workers Secret 中的主密钥加密后保存。</div></div>
+        <div class="form-field"><label>权重</label><input class="control" type="number" value="100"></div>
+        <div class="form-field"><label>优先级</label><input class="control" type="number" value="100"></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="button ghost" id="testChannelButton" type="button">测试连接</button>
+      <button class="button primary" id="saveChannelButton" type="button">保存渠道</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <i class="ri-checkbox-circle-line"></i>
+    <div><strong id="toastTitle">操作成功</strong><span id="toastText">配置已保存到模拟数据。</span></div>
+  </div>
+
+  <script>
+    const AdminDashboard = (() => {
+      const storageKey = 'teaven-admin-theme';
+      const root = document.documentElement;
+      const appShell = document.getElementById('appShell');
+      const sidebar = document.getElementById('sidebar');
+      const mobileOverlay = document.getElementById('mobileOverlay');
+      const toast = document.getElementById('toast');
+      const toastTitle = document.getElementById('toastTitle');
+      const toastText = document.getElementById('toastText');
+      const appTableBody = document.getElementById('appTableBody');
+      const tableSearch = document.getElementById('tableSearch');
+      const statusFilter = document.getElementById('statusFilter');
+      let sortKey = 'calls';
+      let sortDirection = 'desc';
+
+      const apps = [
+        { name: 'My Website', user: 'admin@example.com', domain: 'example.com, www.example.com', calls: 38240, success: '99.12%', route: 'geo_country', status: 'active', key: 'tc_site_8x9f' },
+        { name: 'Teaven Docs', user: 'docs@teaven.cn', domain: 'docs.teaven.cn', calls: 12680, success: '98.48%', route: 'global', status: 'active', key: 'tc_site_p12d' },
+        { name: 'Checkout API', user: 'pay@example.cn', domain: 'pay.example.cn', calls: 24720, success: '96.02%', route: 'fixed', status: 'warning', key: 'tc_site_c76q' },
+        { name: 'Internal Console', user: 'ops@teaven.cn', domain: 'admin.teaven.cn', calls: 4208, success: '99.82%', route: 'global', status: 'active', key: 'tc_site_a21k' },
+        { name: 'Legacy Forum', user: 'forum@example.com', domain: 'bbs.example.com', calls: 932, success: '0.00%', route: 'geo_country', status: 'disabled', key: 'tc_site_lg45' }
+      ];
+
+      const statusMap = {
+        active: '<span class="badge success">正常</span>',
+        warning: '<span class="badge warning">调用异常</span>',
+        disabled: '<span class="badge error">已禁用</span>'
+      };
+
+      const setTheme = (mode) => {
+        root.dataset.theme = mode;
+        localStorage.setItem(storageKey, mode);
+        const icon = document.querySelector('#themeButton i');
+        icon.className = mode === 'dark' ? 'ri-moon-line' : 'ri-sun-line';
+      };
+
+      const initTheme = () => {
+        const saved = localStorage.getItem(storageKey);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(saved || (prefersDark ? 'dark' : 'light'));
+      };
+
+      const showToast = (title, text) => {
+        toastTitle.textContent = title;
+        toastText.textContent = text;
+        toast.classList.add('is-visible');
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => toast.classList.remove('is-visible'), 2600);
+      };
+
+      const openMobileNav = () => {
+        sidebar.classList.add('is-open');
+        mobileOverlay.classList.add('is-open');
+      };
+
+      const closeMobileNav = () => {
+        sidebar.classList.remove('is-open');
+        mobileOverlay.classList.remove('is-open');
+      };
+
+      const openDrawer = () => {
+        document.getElementById('filterDrawer').classList.add('is-open');
+        document.getElementById('drawerBackdrop').classList.add('is-open');
+      };
+
+      const closeDrawer = () => {
+        document.getElementById('filterDrawer').classList.remove('is-open');
+        document.getElementById('drawerBackdrop').classList.remove('is-open');
+      };
+
+      const openModal = () => {
+        document.getElementById('channelModal').classList.add('is-open');
+        document.getElementById('modalBackdrop').classList.add('is-open');
+      };
+
+      const closeModal = () => {
+        document.getElementById('channelModal').classList.remove('is-open');
+        document.getElementById('modalBackdrop').classList.remove('is-open');
+      };
+
+      const renderTable = () => {
+        const keyword = tableSearch.value.trim().toLowerCase();
+        const status = statusFilter.value;
+        const filtered = apps
+          .filter(app => status === 'all' || app.status === status)
+          .filter(app => [app.name, app.user, app.domain, app.key].join(' ').toLowerCase().includes(keyword))
+          .sort((a, b) => {
+            const left = a[sortKey];
+            const right = b[sortKey];
+            const result = typeof left === 'number' ? left - right : String(left).localeCompare(String(right));
+            return sortDirection === 'asc' ? result : -result;
+          });
+
+        appTableBody.innerHTML = filtered.map(app => `
+          <tr>
+            <td><input class="checkbox" type="checkbox" aria-label="选择 ${app.name}"></td>
+            <td><div class="item-title">${app.name}</div><div class="mono">${app.key}</div></td>
+            <td>${app.user}</td>
+            <td><span class="mono">${app.domain}</span></td>
+            <td><strong>${app.calls.toLocaleString()}</strong></td>
+            <td>${app.success}</td>
+            <td><span class="badge neutral">${app.route}</span></td>
+            <td>${statusMap[app.status]}</td>
+            <td><button class="button ghost" type="button" data-action="detail">详情</button></td>
+          </tr>
+        `).join('');
+        document.getElementById('pageSummary').textContent = `显示 1-${filtered.length}，共 ${filtered.length} 个应用`;
+      };
+
+      const bindEvents = () => {
+        document.getElementById('themeButton').addEventListener('click', () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+        document.getElementById('collapseButton').addEventListener('click', () => appShell.classList.toggle('is-collapsed'));
+        document.getElementById('mobileMenuButton').addEventListener('click', openMobileNav);
+        mobileOverlay.addEventListener('click', closeMobileNav);
+        document.querySelectorAll('.nav-link').forEach(button => {
+          button.addEventListener('click', () => {
+            document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('is-active'));
+            button.classList.add('is-active');
+            closeMobileNav();
+          });
+        });
+        document.querySelectorAll('.tab-button').forEach(button => {
+          button.addEventListener('click', () => {
+            document.querySelectorAll('.tab-button').forEach(item => item.classList.remove('is-active'));
+            button.classList.add('is-active');
+            showToast('视图已切换', `当前查看 ${button.textContent} 数据。`);
+          });
+        });
+        document.getElementById('openDrawerButton').addEventListener('click', openDrawer);
+        document.getElementById('closeDrawerButton').addEventListener('click', closeDrawer);
+        document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+        document.getElementById('applyFilterButton').addEventListener('click', () => { closeDrawer(); showToast('筛选已应用', '日志与统计卡片已按条件刷新。'); });
+        document.getElementById('openModalButton').addEventListener('click', openModal);
+        document.getElementById('closeModalButton').addEventListener('click', closeModal);
+        document.getElementById('modalBackdrop').addEventListener('click', closeModal);
+        document.getElementById('testChannelButton').addEventListener('click', () => showToast('连接测试通过', '上游 verify API 响应正常，耗时 186ms。'));
+        document.getElementById('saveChannelButton').addEventListener('click', () => { closeModal(); showToast('渠道已保存', '配置已加密写入模拟数据。'); });
+        document.getElementById('exportButton').addEventListener('click', () => showToast('报告已生成', '当前为静态原型，已模拟导出行为。'));
+        document.getElementById('settingsForm').addEventListener('submit', (event) => { event.preventDefault(); showToast('系统配置已保存', '路由、限流与日志策略已更新。'); });
+        tableSearch.addEventListener('input', renderTable);
+        statusFilter.addEventListener('change', renderTable);
+        document.querySelectorAll('th.sortable').forEach(th => {
+          th.addEventListener('click', () => {
+            const key = th.dataset.sort;
+            sortDirection = sortKey === key && sortDirection === 'desc' ? 'asc' : 'desc';
+            sortKey = key;
+            renderTable();
+          });
+        });
+        appTableBody.addEventListener('click', (event) => {
+          if (event.target.matches('[data-action="detail"]')) showToast('应用详情', '已打开应用概览、密钥、日志与统计入口。');
+        });
+        window.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            closeDrawer();
+            closeModal();
+            closeMobileNav();
+          }
+        });
+      };
+
+      const init = () => {
+        initTheme();
+        bindEvents();
+        renderTable();
+      };
+
+      return { init };
+    })();
+
+    document.addEventListener('DOMContentLoaded', AdminDashboard.init);
+  </script>
+</body>
+</html>
