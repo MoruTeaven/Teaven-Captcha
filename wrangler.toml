@@ -5,12 +5,9 @@ workers_dev = true
 
 [vars]
 APP_ENV = "development"
-API_BASE_URL = "http://localhost:8787"
 CORS_ORIGIN = "*"
-SECRET_ENCRYPTION_KEY = "dev-only-change-this-secret-encryption-key"
-SESSION_SECRET = "dev-only-change-this-session-secret"
 
 # Production deployment:
 # - Set secrets via: wrangler secret put SECRET_ENCRYPTION_KEY
 # - Set secrets via: wrangler secret put SESSION_SECRET
-# - Bind D1 database via Cloudflare dashboard (do not commit database_id to repo)
+# - Bind D1 database via Cloudflare dashboard
