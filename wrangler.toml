@@ -1,6 +1,7 @@
 name = "teaven-captcha"
 main = "src/index.ts"
 compatibility_date = "2026-06-11"
+account_id = "40c5cdd4a50968b4e395ec7a001b9f3f"
 workers_dev = true
 
 [vars]
@@ -13,4 +14,4 @@ SESSION_SECRET = "dev-only-change-this-session-secret"
 [[d1_databases]]
 binding = "DB"
 database_name = "teaven-captcha"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "6b92dbdd-096f-4e7a-b3e9-184851a489b2"
