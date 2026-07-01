@@ -1,8 +1,10 @@
 import { CLIENT_SCRIPT } from './client-script';
+import { ADMIN_HTML } from './admin-script';
 import {
   ApiError,
   assertString,
   assertStringArray,
+  corsHeaders,
   errorResponse,
   jsonResponse,
   noContentResponse,
@@ -59,6 +61,15 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
     return new Response(CLIENT_SCRIPT, {
       headers: {
         'content-type': 'application/javascript; charset=utf-8',
+        'cache-control': 'public, max-age=300',
+      },
+    });
+  }
+
+  if (request.method === 'GET' && (pathname === '/admin' || pathname === '/admin/')) {
+    return new Response(ADMIN_HTML, {
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
         'cache-control': 'public, max-age=300',
       },
     });
@@ -129,6 +140,9 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
   }
   if (request.method === 'GET' && pathname === '/admin/stats') {
     return handleAdminStats(request, env);
+  }
+  if (request.method === 'GET' && pathname === '/admin/stats/stream') {
+    return handleAdminStatsStream(request, env);
   }
 
   if (request.method === 'POST' && pathname === '/v1/challenges') {
@@ -468,21 +482,217 @@ async function handleAdminApps(request: Request, env: Env): Promise<Response> {
 
 async function handleAdminStats(request: Request, env: Env): Promise<Response> {
   await requireAdmin(request, env);
-  const totals = await env.DB.prepare(
-    `SELECT
-       COUNT(*) AS total,
-       SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS success_total,
-       SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) AS failed_total,
-       AVG(latency_ms) AS avg_latency_ms
-     FROM verification_logs`,
-  ).first();
-  const byProvider = await env.DB.prepare(
-    `SELECT provider, COUNT(*) AS total, SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS success_total
-     FROM verification_logs
-     GROUP BY provider
-     ORDER BY total DESC`,
-  ).all();
-  return okResponse(env, request, { totals, by_provider: byProvider.results });
+  const snapshot = await buildAdminStatsSnapshot(env);
+  return okResponse(env, request, { stats: snapshot });
+}
+
+async function handleAdminStatsStream(request: Request, env: Env): Promise<Response> {
+  await requireAdmin(request, env);
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      let closed = false;
+      const safeEnqueue = (chunk: string) => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(chunk));
+        } catch {
+          closed = true;
+        }
+      };
+      const close = () => {
+        if (closed) return;
+        closed = true;
+        try {
+          controller.close();
+        } catch {
+          /* already closed */
+        }
+      };
+
+      const cleanup = () => close();
+      request.signal?.addEventListener('abort', cleanup);
+
+      const tick = async () => {
+        if (closed) return;
+        try {
+          const snapshot = await buildAdminStatsSnapshot(env);
+          safeEnqueue(`data: ${JSON.stringify(snapshot)}\n\n`);
+        } catch (error) {
+          console.error('admin stats stream tick failed', error);
+          safeEnqueue(`event: error\ndata: ${JSON.stringify({ message: 'snapshot failed' })}\n\n`);
+        }
+      };
+
+      await tick();
+      const intervalId = setInterval(tick, ADMIN_STATS_STREAM_INTERVAL_MS);
+
+      // Keep-alive 注释帧，避免边缘节点 30 秒空闲回收
+      const keepaliveId = setInterval(() => safeEnqueue(': keepalive\n\n'), 20000);
+
+      // 兜底：Workers 单请求有 CPU 时间上限，到达后优雅关闭
+      const maxLifetimeId = setTimeout(() => {
+        clearInterval(intervalId);
+        clearInterval(keepaliveId);
+        clearTimeout(maxLifetimeId);
+        request.signal?.removeEventListener('abort', cleanup);
+        close();
+      }, ADMIN_STATS_STREAM_MAX_LIFETIME_MS);
+    },
+  });
+
+  const headers = corsHeaders(env, request);
+  return new Response(stream, {
+    headers: {
+      ...headers,
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-cache, no-transform',
+      connection: 'keep-alive',
+      'x-accel-buffering': 'no',
+    },
+  });
+}
+
+const ADMIN_STATS_STREAM_INTERVAL_MS = 15_000;
+const ADMIN_STATS_STREAM_MAX_LIFETIME_MS = 5 * 60 * 1000;
+
+async function buildAdminStatsSnapshot(env: Env): Promise<AdminStatsSnapshot> {
+  const now = Date.now();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayStartIso = todayStart.toISOString();
+
+  const [today, totals, byProvider, topApps, appCount] = await Promise.all([
+    env.DB.prepare(
+      `SELECT
+         COUNT(*) AS total,
+         SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS success_total,
+         SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) AS failed_total,
+         AVG(latency_ms) AS avg_latency_ms
+       FROM verification_logs
+       WHERE created_at >= ?`,
+    )
+      .bind(todayStartIso)
+      .first<{ total: number; success_total: number | null; failed_total: number | null; avg_latency_ms: number | null }>(),
+    env.DB.prepare(
+      `SELECT
+         COUNT(*) AS total,
+         SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS success_total,
+         SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) AS failed_total,
+         AVG(latency_ms) AS avg_latency_ms
+       FROM verification_logs`,
+    ).first<{ total: number; success_total: number | null; failed_total: number | null; avg_latency_ms: number | null }>(),
+    env.DB.prepare(
+      `SELECT provider, COUNT(*) AS total, SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS success_total
+       FROM verification_logs
+       GROUP BY provider
+       ORDER BY total DESC`,
+    ).all<{ provider: string; total: number; success_total: number | null }>(),
+    env.DB.prepare(
+      `SELECT
+         apps.id, apps.name, apps.site_key, users.email AS user_email,
+         COUNT(logs.id) AS calls,
+         SUM(CASE WHEN logs.success = 1 THEN 1 ELSE 0 END) AS success_total,
+         AVG(logs.latency_ms) AS avg_latency_ms,
+         apps.status, apps.route_strategy, apps.secret_key_hint
+       FROM apps
+       LEFT JOIN verification_logs AS logs ON logs.app_id = apps.id
+       LEFT JOIN users ON users.id = apps.user_id
+       GROUP BY apps.id
+       ORDER BY calls DESC
+       LIMIT 50`,
+    ).all<{
+      id: string;
+      name: string;
+      site_key: string;
+      user_email: string | null;
+      calls: number;
+      success_total: number | null;
+      avg_latency_ms: number | null;
+      status: string;
+      route_strategy: string;
+      secret_key_hint: string;
+    }>(),
+    env.DB.prepare('SELECT COUNT(*) AS total FROM apps').first<{ total: number }>(),
+  ]);
+
+  const todayTotal = today?.total || 0;
+  const todaySuccess = today?.success_total || 0;
+  const grandTotal = totals?.total || 0;
+  const grandSuccess = totals?.success_total || 0;
+
+  return {
+    generated_at: nowIso(),
+    today: {
+      total: todayTotal,
+      success_total: todaySuccess,
+      failed_total: today?.failed_total || 0,
+      success_rate: todayTotal > 0 ? Number(((todaySuccess / todayTotal) * 100).toFixed(2)) : 100,
+      avg_latency_ms: Math.round(today?.avg_latency_ms || 0),
+    },
+    all_time: {
+      total: grandTotal,
+      success_total: grandSuccess,
+      failed_total: totals?.failed_total || 0,
+      success_rate: grandTotal > 0 ? Number(((grandSuccess / grandTotal) * 100).toFixed(2)) : 100,
+      avg_latency_ms: Math.round(totals?.avg_latency_ms || 0),
+    },
+    by_provider: byProvider.results.map((row) => ({
+      provider: row.provider,
+      total: row.total,
+      success_total: row.success_total || 0,
+      success_rate: row.total > 0 ? Number((((row.success_total || 0) / row.total) * 100).toFixed(2)) : 0,
+    })),
+    top_apps: topApps.results.map((row) => {
+      const calls = row.calls || 0;
+      const success = row.success_total || 0;
+      return {
+        id: row.id,
+        name: row.name,
+        key: row.site_key,
+        secret_hint: row.secret_key_hint,
+        user: row.user_email || '',
+        calls,
+        success_rate: calls > 0 ? Number(((success / calls) * 100).toFixed(2)) : 0,
+        avg_latency_ms: Math.round(row.avg_latency_ms || 0),
+        route: row.route_strategy,
+        status: row.status as 'active' | 'disabled',
+      };
+    }),
+    active_apps: appCount?.total || 0,
+  };
+}
+
+interface AdminStatsSnapshot {
+  generated_at: string;
+  today: {
+    total: number;
+    success_total: number;
+    failed_total: number;
+    success_rate: number;
+    avg_latency_ms: number;
+  };
+  all_time: {
+    total: number;
+    success_total: number;
+    failed_total: number;
+    success_rate: number;
+    avg_latency_ms: number;
+  };
+  by_provider: Array<{ provider: string; total: number; success_total: number; success_rate: number }>;
+  top_apps: Array<{
+    id: string;
+    name: string;
+    key: string;
+    secret_hint: string;
+    user: string;
+    calls: number;
+    success_rate: number;
+    avg_latency_ms: number;
+    route: string;
+    status: 'active' | 'disabled';
+  }>;
+  active_apps: number;
 }
 
 async function handleCreateChallenge(request: Request, env: Env): Promise<Response> {
@@ -777,6 +987,13 @@ function getSessionToken(request: Request): string | null {
   const authHeader = request.headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
     return authHeader.slice('Bearer '.length).trim();
+  }
+
+  // Support query parameter for SSE (EventSource cannot set headers)
+  const url = new URL(request.url);
+  const queryToken = url.searchParams.get('token');
+  if (queryToken) {
+    return queryToken.trim();
   }
 
   const cookie = request.headers.get('cookie');

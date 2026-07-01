@@ -1,4 +1,5 @@
-<!doctype html>
+// Auto-generated from admin-dashboard.html. Do not edit manually.
+export const ADMIN_HTML = `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -1022,20 +1023,20 @@
     const SETTINGS_KEY = 'teaven-admin-settings';
 
     // === DOM refs ===
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => document.querySelectorAll(sel);
+    const \$ = (sel) => document.querySelector(sel);
+    const \$\$ = (sel) => document.querySelectorAll(sel);
 
-    const loginView = $('#loginView');
-    const appView = $('#appView');
-    const loginForm = $('#loginForm');
-    const loginError = $('#loginError');
-    const loginButton = $('#loginButton');
-    const appShell = $('#appShell');
-    const sidebar = $('#sidebar');
-    const mobileOverlay = $('#mobileOverlay');
-    const toast = $('#toast');
-    const toastTitle = $('#toastTitle');
-    const toastText = $('#toastText');
+    const loginView = \$('#loginView');
+    const appView = \$('#appView');
+    const loginForm = \$('#loginForm');
+    const loginError = \$('#loginError');
+    const loginButton = \$('#loginButton');
+    const appShell = \$('#appShell');
+    const sidebar = \$('#sidebar');
+    const mobileOverlay = \$('#mobileOverlay');
+    const toast = \$('#toast');
+    const toastTitle = \$('#toastTitle');
+    const toastText = \$('#toastText');
 
     let currentUser = null;
     let eventSource = null;
@@ -1054,7 +1055,7 @@
     function setTheme(mode) {
       document.documentElement.dataset.theme = mode;
       localStorage.setItem(THEME_KEY, mode);
-      const icon = $('#themeButton i');
+      const icon = \$('#themeButton i');
       if (icon) icon.className = mode === 'dark' ? 'ri-moon-line' : 'ri-sun-line';
     }
     function toggleTheme() {
@@ -1087,7 +1088,7 @@
         throw new Error('未授权，请重新登录');
       }
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || data.message || `请求失败 (${res.status})`);
+      if (!res.ok) throw new Error(data.error || data.message || \`请求失败 (\${res.status})\`);
       return data;
     }
 
@@ -1106,10 +1107,10 @@
     function updateUserInfo() {
       if (!currentUser) return;
       const initials = (currentUser.name || currentUser.email || 'AD').substring(0, 2).toUpperCase();
-      $('#sidebarAvatar').textContent = initials;
-      $('#sidebarUserName').textContent = currentUser.name || currentUser.email || 'Admin';
-      $('#sidebarUserRole').textContent = currentUser.role === 'admin' ? '超级管理员' : currentUser.role || '用户';
-      $('#topbarAvatar').textContent = initials;
+      \$('#sidebarAvatar').textContent = initials;
+      \$('#sidebarUserName').textContent = currentUser.name || currentUser.email || 'Admin';
+      \$('#sidebarUserRole').textContent = currentUser.role === 'admin' ? '超级管理员' : currentUser.role || '用户';
+      \$('#topbarAvatar').textContent = initials;
     }
     async function login(email, password) {
       loginButton.disabled = true;
@@ -1159,10 +1160,10 @@
     function navigate() {
       let hash = location.hash.replace('#', '') || 'dashboard';
       if (!pages.includes(hash)) hash = 'dashboard';
-      $$('.page-section').forEach(el => el.classList.remove('is-active'));
-      const target = $('#page-' + hash);
+      \$\$('.page-section').forEach(el => el.classList.remove('is-active'));
+      const target = \$('#page-' + hash);
       if (target) target.classList.add('is-active');
-      $$('.nav-link').forEach(el => {
+      \$\$('.nav-link').forEach(el => {
         el.classList.toggle('is-active', el.getAttribute('href') === '#' + hash);
       });
       closeMobileNav();
@@ -1221,14 +1222,14 @@
     function renderDashboard(stats) {
       const today = stats.today || {};
       const allTime = stats.all_time || {};
-      $('#metricCalls').textContent = fmtNum(today.total);
-      $('#metricCallsSub').textContent = '成功 ' + fmtNum(today.success_total) + ' · 失败 ' + fmtNum(today.failed_total);
-      $('#metricSuccess').textContent = fmtPct(today.success_rate);
-      $('#metricSuccessSub').textContent = '全量 ' + fmtPct(allTime.success_rate);
-      $('#metricLatency').textContent = fmtMs(today.avg_latency_ms);
-      $('#metricLatencySub').textContent = '全量 ' + fmtMs(allTime.avg_latency_ms);
-      $('#metricApps').textContent = String(stats.active_apps || 0);
-      $('#metricAppsSub').textContent = '已注册应用';
+      \$('#metricCalls').textContent = fmtNum(today.total);
+      \$('#metricCallsSub').textContent = '成功 ' + fmtNum(today.success_total) + ' · 失败 ' + fmtNum(today.failed_total);
+      \$('#metricSuccess').textContent = fmtPct(today.success_rate);
+      \$('#metricSuccessSub').textContent = '全量 ' + fmtPct(allTime.success_rate);
+      \$('#metricLatency').textContent = fmtMs(today.avg_latency_ms);
+      \$('#metricLatencySub').textContent = '全量 ' + fmtMs(allTime.avg_latency_ms);
+      \$('#metricApps').textContent = String(stats.active_apps || 0);
+      \$('#metricAppsSub').textContent = '已注册应用';
 
       renderTrendChart(stats);
       renderProviderDistribution(stats.by_provider || []);
@@ -1236,7 +1237,7 @@
     }
 
     function renderTrendChart(stats) {
-      const svg = $('#trendChart');
+      const svg = \$('#trendChart');
       const byProvider = stats.by_provider || [];
       const topApps = stats.top_apps || [];
       const today = stats.today || {};
@@ -1256,32 +1257,32 @@
         failedPoints.push({ x, y: Math.max(fy, 200) });
       }
 
-      const pathD = points.map((p, i) => (i === 0 ? 'M' : 'C') + (i === 0 ? `${p.x} ${p.y}` : `${points[i-1].x + (p.x - points[i-1].x) * 0.5} ${points[i-1].y} ${p.x - (p.x - points[i-1].x) * 0.5} ${p.y} ${p.x} ${p.y}`)).join(' ');
-      const areaD = pathD + ` L${points[points.length-1].x} 230 L${points[0].x} 230 Z`;
-      const failedD = failedPoints.map((p, i) => (i === 0 ? 'M' : 'C') + (i === 0 ? `${p.x} ${p.y}` : `${failedPoints[i-1].x + (p.x - failedPoints[i-1].x) * 0.5} ${failedPoints[i-1].y} ${p.x - (p.x - failedPoints[i-1].x) * 0.5} ${p.y} ${p.x} ${p.y}`)).join(' ');
+      const pathD = points.map((p, i) => (i === 0 ? 'M' : 'C') + (i === 0 ? \`\${p.x} \${p.y}\` : \`\${points[i-1].x + (p.x - points[i-1].x) * 0.5} \${points[i-1].y} \${p.x - (p.x - points[i-1].x) * 0.5} \${p.y} \${p.x} \${p.y}\`)).join(' ');
+      const areaD = pathD + \` L\${points[points.length-1].x} 230 L\${points[0].x} 230 Z\`;
+      const failedD = failedPoints.map((p, i) => (i === 0 ? 'M' : 'C') + (i === 0 ? \`\${p.x} \${p.y}\` : \`\${failedPoints[i-1].x + (p.x - failedPoints[i-1].x) * 0.5} \${failedPoints[i-1].y} \${p.x - (p.x - failedPoints[i-1].x) * 0.5} \${p.y} \${p.x} \${p.y}\`)).join(' ');
 
       const yLabels = [maxVal, Math.round(maxVal * 0.75), Math.round(maxVal * 0.5), Math.round(maxVal * 0.25), 0];
       const yTexts = yLabels.map(v => fmtNum(v));
 
-      svg.innerHTML = `
+      svg.innerHTML = \`
         <path class="chart-grid-line" d="M48 30H735M48 80H735M48 130H735M48 180H735M48 230H735"></path>
-        <text class="chart-axis-text" x="10" y="34">${yTexts[0]}</text>
-        <text class="chart-axis-text" x="10" y="84">${yTexts[1]}</text>
-        <text class="chart-axis-text" x="10" y="134">${yTexts[2]}</text>
-        <text class="chart-axis-text" x="10" y="184">${yTexts[3]}</text>
+        <text class="chart-axis-text" x="10" y="34">\${yTexts[0]}</text>
+        <text class="chart-axis-text" x="10" y="84">\${yTexts[1]}</text>
+        <text class="chart-axis-text" x="10" y="134">\${yTexts[2]}</text>
+        <text class="chart-axis-text" x="10" y="184">\${yTexts[3]}</text>
         <text class="chart-axis-text" x="26" y="234">0</text>
-        <path class="chart-area" d="${areaD}"></path>
-        <path class="chart-line" d="${pathD}"></path>
-        <path class="chart-line-muted" d="${failedD}"></path>
+        <path class="chart-area" d="\${areaD}"></path>
+        <path class="chart-line" d="\${pathD}"></path>
+        <path class="chart-line-muted" d="\${failedD}"></path>
         <text class="chart-axis-text" x="48" y="252">00:00</text>
         <text class="chart-axis-text" x="238" y="252">08:00</text>
         <text class="chart-axis-text" x="426" y="252">16:00</text>
         <text class="chart-axis-text" x="690" y="252">Now</text>
-      `;
+      \`;
     }
 
     function renderProviderDistribution(byProvider) {
-      const container = $('#providerDistribution');
+      const container = \$('#providerDistribution');
       if (!byProvider.length) {
         container.innerHTML = '<div class="empty-state"><strong>暂无数据</strong><p>等待统计数据加载…</p></div>';
         return;
@@ -1291,37 +1292,37 @@
         const pct = ((p.total || 0) / total * 100).toFixed(1);
         const icon = providerIcons[p.provider] || 'ri-cloud-line';
         const name = providerNames[p.provider] || p.provider;
-        return `<div class="channel-item">
+        return \`<div class="channel-item">
           <div class="item-main">
-            <div class="item-icon"><i class="${icon}"></i></div>
-            <div><div class="item-title">${name}</div><div class="item-meta">${pct}% · 成功率 ${fmtPct(p.success_rate)}</div></div>
+            <div class="item-icon"><i class="\${icon}"></i></div>
+            <div><div class="item-title">\${name}</div><div class="item-meta">\${pct}% · 成功率 \${fmtPct(p.success_rate)}</div></div>
           </div>
-          <span class="badge ${p.success_rate >= 95 ? 'success' : p.success_rate >= 80 ? 'warning' : 'error'}">${fmtNum(p.total)}</span>
-        </div>`;
+          <span class="badge \${p.success_rate >= 95 ? 'success' : p.success_rate >= 80 ? 'warning' : 'error'}">\${fmtNum(p.total)}</span>
+        </div>\`;
       }).join('');
     }
 
     function renderTopApps(topApps) {
-      const tbody = $('#topAppsTableBody');
+      const tbody = \$('#topAppsTableBody');
       if (!topApps.length) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">暂无应用数据</td></tr>';
         return;
       }
-      tbody.innerHTML = topApps.map(app => `<tr>
-        <td><div class="item-title">${app.name || '—'}</div><div class="mono">${app.key || ''}</div></td>
-        <td>${app.user || '—'}</td>
-        <td><strong>${fmtNum(app.calls)}</strong></td>
-        <td>${fmtPct(app.success_rate)}</td>
-        <td>${fmtMs(app.avg_latency_ms)}</td>
-        <td>${routeBadge(app.route)}</td>
-        <td>${statusBadge(app.status)}</td>
-      </tr>`).join('');
+      tbody.innerHTML = topApps.map(app => \`<tr>
+        <td><div class="item-title">\${app.name || '—'}</div><div class="mono">\${app.key || ''}</div></td>
+        <td>\${app.user || '—'}</td>
+        <td><strong>\${fmtNum(app.calls)}</strong></td>
+        <td>\${fmtPct(app.success_rate)}</td>
+        <td>\${fmtMs(app.avg_latency_ms)}</td>
+        <td>\${routeBadge(app.route)}</td>
+        <td>\${statusBadge(app.status)}</td>
+      </tr>\`).join('');
     }
 
     // === SSE ===
     function setLiveState(state) {
-      const el = $('#liveStatus');
-      const text = $('#liveText');
+      const el = \$('#liveStatus');
+      const text = \$('#liveText');
       el.classList.remove('is-live', 'is-stale', 'is-error');
       if (state === 'live') { el.classList.add('is-live'); text.textContent = '实时连接'; }
       else if (state === 'stale') { el.classList.add('is-stale'); text.textContent = '数据已缓存'; }
@@ -1378,69 +1379,69 @@
 
     // === Channels ===
     async function loadChannels() {
-      const tbody = $('#channelsTableBody');
+      const tbody = \$('#channelsTableBody');
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);"><span class="loading-spinner"></span> 加载中…</td></tr>';
       try {
         const data = await api('GET', '/admin/provider-channels');
         allChannels = data.provider_channels || data.channels || [];
         renderChannels();
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--error);">加载失败: ${err.message}</td></tr>`;
+        tbody.innerHTML = \`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${err.message}</td></tr>\`;
       }
     }
 
     function renderChannels() {
-      const tbody = $('#channelsTableBody');
+      const tbody = \$('#channelsTableBody');
       if (!allChannels.length) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">暂无渠道，请点击"新增渠道"添加</td></tr>';
         return;
       }
-      tbody.innerHTML = allChannels.map(ch => `<tr>
-        <td><span class="badge info">${providerNames[ch.provider] || ch.provider}</span></td>
-        <td><strong>${ch.name || '—'}</strong></td>
-        <td>${statusBadge(ch.status)}</td>
-        <td>${ch.weight ?? '—'}</td>
-        <td>${ch.priority ?? '—'}</td>
-        <td>${ch.timeout_ms ?? '—'}</td>
-        <td>${fmtDate(ch.created_at)}</td>
+      tbody.innerHTML = allChannels.map(ch => \`<tr>
+        <td><span class="badge info">\${providerNames[ch.provider] || ch.provider}</span></td>
+        <td><strong>\${ch.name || '—'}</strong></td>
+        <td>\${statusBadge(ch.status)}</td>
+        <td>\${ch.weight ?? '—'}</td>
+        <td>\${ch.priority ?? '—'}</td>
+        <td>\${ch.timeout_ms ?? '—'}</td>
+        <td>\${fmtDate(ch.created_at)}</td>
         <td>
           <div style="display:flex;gap:6px;">
-            <button class="button ghost sm" onclick="window.__editChannel(${ch.id})"><i class="ri-edit-line"></i></button>
-            <button class="button ghost sm" onclick="window.__toggleChannelStatus(${ch.id})"><i class="ri-toggle-line"></i></button>
-            <button class="button ghost sm" onclick="window.__testChannel(${ch.id})"><i class="ri-links-line"></i></button>
+            <button class="button ghost sm" onclick="window.__editChannel(\${ch.id})"><i class="ri-edit-line"></i></button>
+            <button class="button ghost sm" onclick="window.__toggleChannelStatus(\${ch.id})"><i class="ri-toggle-line"></i></button>
+            <button class="button ghost sm" onclick="window.__testChannel(\${ch.id})"><i class="ri-links-line"></i></button>
           </div>
         </td>
-      </tr>`).join('');
+      </tr>\`).join('');
     }
 
     function openChannelModal(channel) {
-      $('#channelModalTitle').textContent = channel ? '编辑渠道' : '新增渠道';
-      $('#channelFormId').value = channel ? channel.id : '';
-      $('#channelProvider').value = channel ? channel.provider : 'turnstile';
-      $('#channelName').value = channel ? channel.name : '';
-      $('#channelPublicKey').value = channel ? channel.public_key : '';
-      $('#channelWeight').value = channel ? (channel.weight ?? 100) : 100;
-      $('#channelPriority').value = channel ? (channel.priority ?? 100) : 100;
-      $('#channelTimeout').value = channel ? (channel.timeout_ms ?? 5000) : 5000;
-      $('#channelStatus').value = channel ? channel.status : 'active';
-      $('#channelModal').classList.add('is-open');
-      $('#channelModalBackdrop').classList.add('is-open');
+      \$('#channelModalTitle').textContent = channel ? '编辑渠道' : '新增渠道';
+      \$('#channelFormId').value = channel ? channel.id : '';
+      \$('#channelProvider').value = channel ? channel.provider : 'turnstile';
+      \$('#channelName').value = channel ? channel.name : '';
+      \$('#channelPublicKey').value = channel ? channel.public_key : '';
+      \$('#channelWeight').value = channel ? (channel.weight ?? 100) : 100;
+      \$('#channelPriority').value = channel ? (channel.priority ?? 100) : 100;
+      \$('#channelTimeout').value = channel ? (channel.timeout_ms ?? 5000) : 5000;
+      \$('#channelStatus').value = channel ? channel.status : 'active';
+      \$('#channelModal').classList.add('is-open');
+      \$('#channelModalBackdrop').classList.add('is-open');
     }
     function closeChannelModal() {
-      $('#channelModal').classList.remove('is-open');
-      $('#channelModalBackdrop').classList.remove('is-open');
+      \$('#channelModal').classList.remove('is-open');
+      \$('#channelModalBackdrop').classList.remove('is-open');
     }
 
     async function saveChannel() {
-      const id = $('#channelFormId').value;
+      const id = \$('#channelFormId').value;
       const body = {
-        provider: $('#channelProvider').value,
-        name: $('#channelName').value.trim(),
-        public_key: $('#channelPublicKey').value.trim(),
-        weight: parseInt($('#channelWeight').value) || 100,
-        priority: parseInt($('#channelPriority').value) || 100,
-        timeout_ms: parseInt($('#channelTimeout').value) || 5000,
-        status: $('#channelStatus').value
+        provider: \$('#channelProvider').value,
+        name: \$('#channelName').value.trim(),
+        public_key: \$('#channelPublicKey').value.trim(),
+        weight: parseInt(\$('#channelWeight').value) || 100,
+        priority: parseInt(\$('#channelPriority').value) || 100,
+        timeout_ms: parseInt(\$('#channelTimeout').value) || 5000,
+        status: \$('#channelStatus').value
       };
       if (!body.name || !body.public_key) {
         showToast('请填写必填项', '名称和 Public Key 不能为空', 'warning');
@@ -1485,42 +1486,42 @@
 
     // === Apps ===
     async function loadApps() {
-      const tbody = $('#appsTableBody');
+      const tbody = \$('#appsTableBody');
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);"><span class="loading-spinner"></span> 加载中…</td></tr>';
       try {
         const data = await api('GET', '/admin/apps');
         allApps = data.apps || [];
         renderApps();
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--error);">加载失败: ${err.message}</td></tr>`;
+        tbody.innerHTML = \`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${err.message}</td></tr>\`;
       }
     }
 
     function renderApps() {
-      const keyword = ($('#appsSearch').value || '').trim().toLowerCase();
-      const statusVal = $('#appsStatusFilter').value;
+      const keyword = (\$('#appsSearch').value || '').trim().toLowerCase();
+      const statusVal = \$('#appsStatusFilter').value;
       let filtered = allApps;
       if (statusVal !== 'all') filtered = filtered.filter(a => a.status === statusVal);
       if (keyword) filtered = filtered.filter(a => [a.name, a.user_email, a.allowed_domains, a.site_key].join(' ').toLowerCase().includes(keyword));
 
-      const tbody = $('#appsTableBody');
+      const tbody = \$('#appsTableBody');
       if (!filtered.length) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">暂无匹配的应用</td></tr>';
         return;
       }
-      tbody.innerHTML = filtered.map(app => `<tr>
-        <td><strong>${app.name || '—'}</strong></td>
-        <td>${app.user_email || '—'}</td>
-        <td><span class="mono">${app.site_key || '—'}</span></td>
-        <td>${statusBadge(app.status)}</td>
-        <td>${routeBadge(app.route_strategy)}</td>
-        <td>${fmtDate(app.created_at)}</td>
+      tbody.innerHTML = filtered.map(app => \`<tr>
+        <td><strong>\${app.name || '—'}</strong></td>
+        <td>\${app.user_email || '—'}</td>
+        <td><span class="mono">\${app.site_key || '—'}</span></td>
+        <td>\${statusBadge(app.status)}</td>
+        <td>\${routeBadge(app.route_strategy)}</td>
+        <td>\${fmtDate(app.created_at)}</td>
         <td>
           <div style="display:flex;gap:6px;">
-            <button class="button ghost sm" onclick="window.__toggleAppStatus(${app.id})"><i class="ri-toggle-line"></i></button>
+            <button class="button ghost sm" onclick="window.__toggleAppStatus(\${app.id})"><i class="ri-toggle-line"></i></button>
           </div>
         </td>
-      </tr>`).join('');
+      </tr>\`).join('');
     }
 
     window.__toggleAppStatus = async (id) => {
@@ -1536,30 +1537,30 @@
 
     // === Users ===
     async function loadUsers() {
-      const tbody = $('#usersTableBody');
+      const tbody = \$('#usersTableBody');
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);"><span class="loading-spinner"></span> 加载中…</td></tr>';
       try {
         const data = await api('GET', '/admin/users');
         allUsers = data.users || [];
         renderUsers();
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--error);">加载失败: ${err.message}</td></tr>`;
+        tbody.innerHTML = \`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${err.message}</td></tr>\`;
       }
     }
 
     function renderUsers() {
-      const tbody = $('#usersTableBody');
+      const tbody = \$('#usersTableBody');
       if (!allUsers.length) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);">暂无用户</td></tr>';
         return;
       }
-      tbody.innerHTML = allUsers.map(u => `<tr>
-        <td>${u.email || '—'}</td>
-        <td>${u.name || '—'}</td>
-        <td><span class="badge ${u.role === 'admin' ? 'info' : 'neutral'}">${u.role || 'user'}</span></td>
-        <td>${statusBadge(u.status)}</td>
-        <td>${fmtDate(u.created_at)}</td>
-      </tr>`).join('');
+      tbody.innerHTML = allUsers.map(u => \`<tr>
+        <td>\${u.email || '—'}</td>
+        <td>\${u.name || '—'}</td>
+        <td><span class="badge \${u.role === 'admin' ? 'info' : 'neutral'}">\${u.role || 'user'}</span></td>
+        <td>\${statusBadge(u.status)}</td>
+        <td>\${fmtDate(u.created_at)}</td>
+      </tr>\`).join('');
     }
 
     // === Analytics ===
@@ -1568,30 +1569,30 @@
         const data = await api('GET', '/admin/stats');
         const stats = data.stats || {};
         const allTime = stats.all_time || {};
-        $('#allTimeTotal').textContent = fmtNum(allTime.total);
-        $('#allTimeSuccess').textContent = fmtPct(allTime.success_rate);
-        $('#allTimeLatency').textContent = fmtMs(allTime.avg_latency_ms);
+        \$('#allTimeTotal').textContent = fmtNum(allTime.total);
+        \$('#allTimeSuccess').textContent = fmtPct(allTime.success_rate);
+        \$('#allTimeLatency').textContent = fmtMs(allTime.avg_latency_ms);
 
         const byProvider = stats.by_provider || [];
         const maxProviderTotal = Math.max(...byProvider.map(p => p.total || 0), 1);
-        $('#analyticsProviderBreakdown').innerHTML = byProvider.length ? byProvider.map(p => {
+        \$('#analyticsProviderBreakdown').innerHTML = byProvider.length ? byProvider.map(p => {
           const pct = ((p.total || 0) / maxProviderTotal * 100).toFixed(0);
-          return `<div class="stat-bar-row">
-            <div class="stat-bar-label">${providerNames[p.provider] || p.provider}</div>
-            <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
-            <div class="stat-bar-value">${fmtNum(p.total)}</div>
-          </div>`;
+          return \`<div class="stat-bar-row">
+            <div class="stat-bar-label">\${providerNames[p.provider] || p.provider}</div>
+            <div class="stat-bar-track"><div class="stat-bar-fill" style="width:\${pct}%"></div></div>
+            <div class="stat-bar-value">\${fmtNum(p.total)}</div>
+          </div>\`;
         }).join('') : '<div class="empty-state"><strong>暂无数据</strong></div>';
 
         const topApps = stats.top_apps || [];
         const maxAppCalls = Math.max(...topApps.map(a => a.calls || 0), 1);
-        $('#analyticsTopApps').innerHTML = topApps.length ? topApps.map(a => {
+        \$('#analyticsTopApps').innerHTML = topApps.length ? topApps.map(a => {
           const pct = ((a.calls || 0) / maxAppCalls * 100).toFixed(0);
-          return `<div class="stat-bar-row">
-            <div class="stat-bar-label" title="${a.name || ''}">${(a.name || '—').substring(0, 10)}</div>
-            <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
-            <div class="stat-bar-value">${fmtNum(a.calls)}</div>
-          </div>`;
+          return \`<div class="stat-bar-row">
+            <div class="stat-bar-label" title="\${a.name || ''}">\${(a.name || '—').substring(0, 10)}</div>
+            <div class="stat-bar-track"><div class="stat-bar-fill" style="width:\${pct}%"></div></div>
+            <div class="stat-bar-value">\${fmtNum(a.calls)}</div>
+          </div>\`;
         }).join('') : '<div class="empty-state"><strong>暂无数据</strong></div>';
       } catch (err) {
         console.warn('Failed to load analytics:', err);
@@ -1600,7 +1601,7 @@
 
     // === Logs ===
     async function loadLogsAppSelect() {
-      const select = $('#logsAppSelect');
+      const select = \$('#logsAppSelect');
       if (select.options.length <= 1) {
         try {
           const data = await api('GET', '/admin/apps');
@@ -1616,7 +1617,7 @@
     }
 
     async function loadLogs(appId) {
-      const tbody = $('#logsTableBody');
+      const tbody = \$('#logsTableBody');
       if (!appId) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">请先选择一个应用</td></tr>';
         return;
@@ -1629,16 +1630,16 @@
           tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">暂无日志</td></tr>';
           return;
         }
-        tbody.innerHTML = logs.map(log => `<tr>
-          <td><span class="badge info">${providerNames[log.provider] || log.provider || '—'}</span></td>
-          <td>${log.success ? '<span class="badge success">成功</span>' : '<span class="badge error">失败</span>'}</td>
-          <td><span class="mono">${log.error_code || '—'}</span></td>
-          <td><span class="mono">${log.hostname || '—'}</span></td>
-          <td>${log.latency_ms != null ? log.latency_ms : '—'}</td>
-          <td>${fmtDate(log.created_at)}</td>
-        </tr>`).join('');
+        tbody.innerHTML = logs.map(log => \`<tr>
+          <td><span class="badge info">\${providerNames[log.provider] || log.provider || '—'}</span></td>
+          <td>\${log.success ? '<span class="badge success">成功</span>' : '<span class="badge error">失败</span>'}</td>
+          <td><span class="mono">\${log.error_code || '—'}</span></td>
+          <td><span class="mono">\${log.hostname || '—'}</span></td>
+          <td>\${log.latency_ms != null ? log.latency_ms : '—'}</td>
+          <td>\${fmtDate(log.created_at)}</td>
+        </tr>\`).join('');
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--error);">加载失败: ${err.message}</td></tr>`;
+        tbody.innerHTML = \`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${err.message}</td></tr>\`;
       }
     }
 
@@ -1646,28 +1647,28 @@
     function loadSettings() {
       try {
         const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
-        if (saved.defaultProvider) $('#settingDefaultProvider').value = saved.defaultProvider;
-        if (saved.timeout) $('#settingTimeout').value = saved.timeout;
+        if (saved.defaultProvider) \$('#settingDefaultProvider').value = saved.defaultProvider;
+        if (saved.timeout) \$('#settingTimeout').value = saved.timeout;
         if (saved.route) {
-          const radio = document.querySelector(`input[name="settingRoute"][value="${saved.route}"]`);
+          const radio = document.querySelector(\`input[name="settingRoute"][value="\${saved.route}"]\`);
           if (radio) radio.checked = true;
         }
-        if (saved.checkOrigin != null) $('#settingCheckOrigin').checked = saved.checkOrigin;
-        if (saved.ipHash != null) $('#settingIpHash').checked = saved.ipHash;
-        if (saved.autoDisable != null) $('#settingAutoDisable').checked = saved.autoDisable;
-        if (saved.fallback != null) $('#settingFallback').checked = saved.fallback;
+        if (saved.checkOrigin != null) \$('#settingCheckOrigin').checked = saved.checkOrigin;
+        if (saved.ipHash != null) \$('#settingIpHash').checked = saved.ipHash;
+        if (saved.autoDisable != null) \$('#settingAutoDisable').checked = saved.autoDisable;
+        if (saved.fallback != null) \$('#settingFallback').checked = saved.fallback;
       } catch (_) {}
     }
 
     function saveSettings() {
       const settings = {
-        defaultProvider: $('#settingDefaultProvider').value,
-        timeout: $('#settingTimeout').value,
+        defaultProvider: \$('#settingDefaultProvider').value,
+        timeout: \$('#settingTimeout').value,
         route: (document.querySelector('input[name="settingRoute"]:checked') || {}).value || 'geo_country',
-        checkOrigin: $('#settingCheckOrigin').checked,
-        ipHash: $('#settingIpHash').checked,
-        autoDisable: $('#settingAutoDisable').checked,
-        fallback: $('#settingFallback').checked
+        checkOrigin: \$('#settingCheckOrigin').checked,
+        ipHash: \$('#settingIpHash').checked,
+        autoDisable: \$('#settingAutoDisable').checked,
+        fallback: \$('#settingFallback').checked
       };
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
       showToast('配置已保存', '系统策略设置已存储到本地');
@@ -1681,21 +1682,21 @@
     function bindEvents() {
       loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const email = $('#loginEmail').value.trim();
-        const password = $('#loginPassword').value;
+        const email = \$('#loginEmail').value.trim();
+        const password = \$('#loginPassword').value;
         if (!email || !password) { loginError.textContent = '请填写邮箱和密码'; return; }
         login(email, password);
       });
 
-      $('#logoutButton').addEventListener('click', logout);
-      $('#themeButton').addEventListener('click', toggleTheme);
-      $('#collapseButton').addEventListener('click', () => appShell.classList.toggle('is-collapsed'));
-      $('#mobileMenuButton').addEventListener('click', openMobileNav);
+      \$('#logoutButton').addEventListener('click', logout);
+      \$('#themeButton').addEventListener('click', toggleTheme);
+      \$('#collapseButton').addEventListener('click', () => appShell.classList.toggle('is-collapsed'));
+      \$('#mobileMenuButton').addEventListener('click', openMobileNav);
       mobileOverlay.addEventListener('click', closeMobileNav);
 
       window.addEventListener('hashchange', navigate);
 
-      $('#refreshStatsButton').addEventListener('click', async () => {
+      \$('#refreshStatsButton').addEventListener('click', async () => {
         try {
           const data = await api('GET', '/admin/stats');
           if (data.stats) { latestStats = data.stats; renderDashboard(data.stats); }
@@ -1703,29 +1704,29 @@
         } catch (err) { showToast('刷新失败', err.message, 'error'); }
       });
 
-      $('#addChannelButton').addEventListener('click', () => openChannelModal(null));
-      $('#closeChannelModal').addEventListener('click', closeChannelModal);
-      $('#channelModalBackdrop').addEventListener('click', closeChannelModal);
-      $('#saveChannelBtn').addEventListener('click', saveChannel);
-      $('#testChannelBtn').addEventListener('click', async () => {
-        const id = $('#channelFormId').value;
+      \$('#addChannelButton').addEventListener('click', () => openChannelModal(null));
+      \$('#closeChannelModal').addEventListener('click', closeChannelModal);
+      \$('#channelModalBackdrop').addEventListener('click', closeChannelModal);
+      \$('#saveChannelBtn').addEventListener('click', saveChannel);
+      \$('#testChannelBtn').addEventListener('click', async () => {
+        const id = \$('#channelFormId').value;
         if (id) { window.__testChannel(parseInt(id)); }
         else { showToast('请先保存渠道', '新建渠道需先保存后才能测试', 'warning'); }
       });
 
-      $('#appsSearch').addEventListener('input', renderApps);
-      $('#appsStatusFilter').addEventListener('change', renderApps);
+      \$('#appsSearch').addEventListener('input', renderApps);
+      \$('#appsStatusFilter').addEventListener('change', renderApps);
 
-      $('#refreshAnalyticsButton').addEventListener('click', async () => {
+      \$('#refreshAnalyticsButton').addEventListener('click', async () => {
         await loadAnalytics();
         showToast('数据已刷新', '分析数据已更新');
       });
 
-      $('#logsAppSelect').addEventListener('change', (e) => loadLogs(e.target.value));
-      $('#refreshLogsButton').addEventListener('click', () => loadLogs($('#logsAppSelect').value));
+      \$('#logsAppSelect').addEventListener('change', (e) => loadLogs(e.target.value));
+      \$('#refreshLogsButton').addEventListener('click', () => loadLogs(\$('#logsAppSelect').value));
 
-      $('#settingsForm').addEventListener('submit', (e) => { e.preventDefault(); saveSettings(); });
-      $('#settingsForm').addEventListener('reset', () => {
+      \$('#settingsForm').addEventListener('submit', (e) => { e.preventDefault(); saveSettings(); });
+      \$('#settingsForm').addEventListener('reset', () => {
         setTimeout(() => {
           localStorage.removeItem(SETTINGS_KEY);
           showToast('已重置', '设置已恢复默认值');
@@ -1752,3 +1753,4 @@
   </script>
 </body>
 </html>
+`;

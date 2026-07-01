@@ -100,7 +100,7 @@ export function assertStringArray(value: unknown, field: string): string[] {
   return value.map((item) => assertString(item, field, { min: 1, max: 255 }).toLowerCase());
 }
 
-function corsHeaders(env: Env, request: Request): HeadersInit {
+export function corsHeaders(env: Env, request: Request): HeadersInit {
   const origin = request.headers.get('origin');
   const configured = env.CORS_ORIGIN || '*';
   const allowOrigin = configured === '*' ? origin || '*' : configured;

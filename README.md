@@ -7,6 +7,7 @@ Cloudflare Workers + D1 版本的人机验证码聚合平台 MVP。
 - 用户注册、登录、退出、当前用户信息。
 - 应用创建、更新、重置密钥、日志和统计。
 - 管理员上游渠道配置。
+- 管理后台实时统计：`GET /admin/stats/stream`（SSE 推送，每 15 秒一次，`admin-dashboard.html` 自动接收，页面隐藏断开、可见重连）。
 - `client.js` 浏览器 SDK。
 - `/v1/challenges` 创建验证码挑战。
 - `/v1/verify` 统一服务端校验。

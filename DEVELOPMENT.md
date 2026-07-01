@@ -618,7 +618,59 @@ CREATE TABLE sessions (
 
 #### GET /admin/stats
 
-全局统计。
+全局统计快照（一次性返回）。管理员鉴权。响应字段：
+
+```json
+{
+  "success": true,
+  "stats": {
+    "generated_at": "2026-06-29T11:03:00.000Z",
+    "today": {
+      "total": 128600,
+      "success_total": 126950,
+      "failed_total": 1650,
+      "success_rate": 98.72,
+      "avg_latency_ms": 186
+    },
+    "all_time": {
+      "total": 128600,
+      "success_total": 126950,
+      "failed_total": 1650,
+      "success_rate": 98.72,
+      "avg_latency_ms": 186
+    },
+    "by_provider": [
+      { "provider": "turnstile", "total": 98000, "success_total": 97200, "success_rate": 99.18 }
+    ],
+    "top_apps": [
+      { "id": "app_xxx", "name": "My Website", "key": "tc_site_xxx", "user": "admin@example.com", "calls": 38240, "success_rate": 99.12, "avg_latency_ms": 180, "route": "geo_country", "status": "active" }
+    ],
+    "active_apps": 342
+  }
+}
+```
+
+#### GET /admin/stats/stream
+
+SSE（Server-Sent Events）实时统计推送流。管理员鉴权（依赖 session cookie，`EventSource` 无法自定义 header，因此跨域部署需保证同源或使用 cookie 透传）。
+
+- 鉴权失败时返回 401 JSON，连接不会建立。
+- 连接建立后，服务端每 15 秒推送一次 `data:` 帧，payload 为上述 `stats` 对象（不带外层 `success` 包装）。
+- 每 20 秒发送一个 `: keepalive` 注释帧，防止边缘节点空闲回收。
+- 客户端断开（`request.signal` abort）时服务端立即清理定时器。
+- 单连接最长存活 5 分钟，到期后服务端主动关闭，客户端 `EventSource` 会自动重连。
+- 浏览器内置自动重连，无需前端实现退避。
+
+前端示例（`admin-dashboard.html` 已采用）：
+
+```js
+const es = new EventSource('/admin/stats/stream', { withCredentials: true });
+es.onmessage = (event) => {
+  const snapshot = JSON.parse(event.data);
+  renderDashboard(snapshot);
+};
+// 页面隐藏时 es.close() 节省资源；可见时重新 new EventSource()
+```
 
 ## 10. 前端脚本设计
 
