@@ -533,6 +533,39 @@ export const ADMIN_HTML = `<!doctype html>
   </style>
 </head>
 <body>
+  <!-- ===== Setup View (First Time) ===== -->
+  <div class="login-view" id="setupView">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="brand-mark"><i class="ri-shield-check-line"></i></div>
+        <div class="login-brand-text">Teaven Captcha</div>
+      </div>
+      <p class="login-subtitle">首次使用 · 请创建管理员账号</p>
+      <form class="login-form" id="setupForm" novalidate>
+        <div class="form-field">
+          <label for="setupName">管理员名称</label>
+          <input class="control" id="setupName" type="text" placeholder="例如：Admin" required autocomplete="name">
+        </div>
+        <div class="form-field">
+          <label for="setupEmail">邮箱地址</label>
+          <input class="control" id="setupEmail" type="email" placeholder="admin@example.com" required autocomplete="email">
+        </div>
+        <div class="form-field">
+          <label for="setupPassword">密码</label>
+          <input class="control" id="setupPassword" type="password" placeholder="至少6位" required autocomplete="new-password">
+        </div>
+        <div class="form-field">
+          <label for="setupConfirmPassword">确认密码</label>
+          <input class="control" id="setupConfirmPassword" type="password" placeholder="再次输入密码" required autocomplete="new-password">
+        </div>
+        <div class="login-error" id="setupError"></div>
+        <button class="button primary login-button" type="submit" id="setupButton">
+          <i class="ri-user-add-line"></i> 创建管理员
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- ===== Login View ===== -->
   <div class="login-view" id="loginView">
     <div class="login-card">
@@ -1026,8 +1059,12 @@ export const ADMIN_HTML = `<!doctype html>
     const \$ = (sel) => document.querySelector(sel);
     const \$\$ = (sel) => document.querySelectorAll(sel);
 
+    const setupView = \$('#setupView');
     const loginView = \$('#loginView');
     const appView = \$('#appView');
+    const setupForm = \$('#setupForm');
+    const setupError = \$('#setupError');
+    const setupButton = \$('#setupButton');
     const loginForm = \$('#loginForm');
     const loginError = \$('#loginError');
     const loginButton = \$('#loginButton');
@@ -1093,12 +1130,20 @@ export const ADMIN_HTML = `<!doctype html>
     }
 
     // === Auth ===
+    function showSetup() {
+      setupView.classList.add('is-active');
+      loginView.classList.remove('is-active');
+      appView.classList.remove('is-active');
+      setupError.textContent = '';
+    }
     function showLogin() {
+      setupView.classList.remove('is-active');
       loginView.classList.add('is-active');
       appView.classList.remove('is-active');
       loginError.textContent = '';
     }
     function showApp() {
+      setupView.classList.remove('is-active');
       loginView.classList.remove('is-active');
       appView.classList.add('is-active');
       updateUserInfo();
@@ -1143,6 +1188,18 @@ export const ADMIN_HTML = `<!doctype html>
       showLogin();
     }
     async function checkAuth() {
+      // Check if system needs initialization (no users exist)
+      try {
+        const res = await fetch('/auth/status');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.needs_setup) {
+            showSetup();
+            return;
+          }
+        }
+      } catch (_) {}
+
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) { showLogin(); return; }
       try {
@@ -1152,6 +1209,32 @@ export const ADMIN_HTML = `<!doctype html>
       } catch (_) {
         localStorage.removeItem(TOKEN_KEY);
         showLogin();
+      }
+    }
+
+    async function setupAdmin(name, email, password) {
+      setupButton.disabled = true;
+      setupButton.innerHTML = '<span class="loading-spinner"></span> 创建中…';
+      setupError.textContent = '';
+      try {
+        const data = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        }).then(r => r.json());
+        if (data.success && data.token) {
+          localStorage.setItem(TOKEN_KEY, data.token);
+          currentUser = data.user || { name, email, role: 'admin' };
+          showToast('管理员创建成功', '欢迎使用 Teaven Captcha');
+          showApp();
+        } else {
+          throw new Error(data.message || data.error || '创建失败');
+        }
+      } catch (err) {
+        setupError.textContent = err.message || '创建管理员失败';
+      } finally {
+        setupButton.disabled = false;
+        setupButton.innerHTML = '<i class="ri-user-add-line"></i> 创建管理员';
       }
     }
 
@@ -1238,28 +1321,37 @@ export const ADMIN_HTML = `<!doctype html>
 
     function renderTrendChart(stats) {
       const svg = \$('#trendChart');
-      const byProvider = stats.by_provider || [];
-      const topApps = stats.top_apps || [];
       const today = stats.today || {};
-      const maxVal = Math.max(today.total || 1, 100);
+      const total = today.total || 0;
+
+      if (!total) {
+        svg.innerHTML = \`
+          <text class="chart-axis-text" x="390" y="130" text-anchor="middle" style="font-size:14px;">暂无调用数据</text>
+          <text class="chart-axis-text" x="390" y="155" text-anchor="middle" style="font-size:12px;opacity:0.6;">当有验证码调用时，趋势图将自动展示</text>
+        \`;
+        return;
+      }
+
+      const maxVal = Math.max(total, 1);
       const successTotal = today.success_total || 0;
       const failedTotal = today.failed_total || 0;
+      const successRatio = successTotal / maxVal;
+      const failedRatio = failedTotal / maxVal;
 
       const points = [];
       const failedPoints = [];
       const numPoints = 12;
       for (let i = 0; i < numPoints; i++) {
         const x = 48 + (i / (numPoints - 1)) * 687;
-        const ratio = 0.3 + Math.random() * 0.7;
-        const y = 230 - (ratio * (successTotal / maxVal) * 200);
+        const y = 230 - (successRatio * 200);
         points.push({ x, y });
-        const fy = 230 - (ratio * 0.15 * (failedTotal / Math.max(maxVal, 1)) * 200);
+        const fy = 230 - (failedRatio * 0.15 * 200);
         failedPoints.push({ x, y: Math.max(fy, 200) });
       }
 
-      const pathD = points.map((p, i) => (i === 0 ? 'M' : 'C') + (i === 0 ? \`\${p.x} \${p.y}\` : \`\${points[i-1].x + (p.x - points[i-1].x) * 0.5} \${points[i-1].y} \${p.x - (p.x - points[i-1].x) * 0.5} \${p.y} \${p.x} \${p.y}\`)).join(' ');
-      const areaD = pathD + \` L\${points[points.length-1].x} 230 L\${points[0].x} 230 Z\`;
-      const failedD = failedPoints.map((p, i) => (i === 0 ? 'M' : 'C') + (i === 0 ? \`\${p.x} \${p.y}\` : \`\${failedPoints[i-1].x + (p.x - failedPoints[i-1].x) * 0.5} \${failedPoints[i-1].y} \${p.x - (p.x - failedPoints[i-1].x) * 0.5} \${p.y} \${p.x} \${p.y}\`)).join(' ');
+      const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + \`${p.x} ${p.y}\`).join(' ');
+      const areaD = pathD + ` L${points[points.length-1].x} 230 L${points[0].x} 230 Z`;
+      const failedD = failedPoints.map((p, i) => (i === 0 ? 'M' : 'L') + \`${p.x} ${p.y}\`).join(' ');
 
       const yLabels = [maxVal, Math.round(maxVal * 0.75), Math.round(maxVal * 0.5), Math.round(maxVal * 0.25), 0];
       const yTexts = yLabels.map(v => fmtNum(v));
@@ -1680,6 +1772,18 @@ export const ADMIN_HTML = `<!doctype html>
 
     // === Event bindings ===
     function bindEvents() {
+      setupForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = \$('#setupName').value.trim();
+        const email = \$('#setupEmail').value.trim();
+        const password = \$('#setupPassword').value;
+        const confirmPassword = \$('#setupConfirmPassword').value;
+        if (!name || !email || !password) { setupError.textContent = '请填写所有字段'; return; }
+        if (password.length < 6) { setupError.textContent = '密码至少6位'; return; }
+        if (password !== confirmPassword) { setupError.textContent = '两次密码不一致'; return; }
+        setupAdmin(name, email, password);
+      });
+
       loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const email = \$('#loginEmail').value.trim();

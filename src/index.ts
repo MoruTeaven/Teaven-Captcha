@@ -84,6 +84,9 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
   if (request.method === 'POST' && pathname === '/auth/logout') {
     return handleLogout(request, env);
   }
+  if (request.method === 'GET' && pathname === '/auth/status') {
+    return handleAuthStatus(request, env);
+  }
   if (request.method === 'GET' && pathname === '/me') {
     return handleMe(request, env);
   }
@@ -223,6 +226,12 @@ async function handleLogout(request: Request, env: Env): Promise<Response> {
 async function handleMe(request: Request, env: Env): Promise<Response> {
   const auth = await requireUser(request, env);
   return okResponse(env, request, { user: toPublicUser(auth.user) });
+}
+
+async function handleAuthStatus(request: Request, env: Env): Promise<Response> {
+  const countRow = await env.DB.prepare('SELECT COUNT(*) AS total FROM users').first<{ total: number }>();
+  const needsSetup = !countRow || countRow.total === 0;
+  return okResponse(env, request, { needs_setup: needsSetup });
 }
 
 async function handleListApps(request: Request, env: Env): Promise<Response> {

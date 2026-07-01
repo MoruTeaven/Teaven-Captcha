@@ -1,13 +1,29 @@
 name = "teaven-captcha"
 main = "src/index.ts"
 compatibility_date = "2026-06-11"
+account_id = "40c5cdd4a50968b4e395ec7a001b9f3f"
 workers_dev = true
 
 [vars]
 APP_ENV = "development"
 CORS_ORIGIN = "*"
 
-# Production deployment:
-# - Set secrets via: wrangler secret put SECRET_ENCRYPTION_KEY
-# - Set secrets via: wrangler secret put SESSION_SECRET
-# - Bind D1 database via Cloudflare dashboard
+[[d1_databases]]
+binding = "DB"
+database_name = "teaven-captcha"
+database_id = "6b92dbdd-096f-4e7a-b3e9-184851a489b2"
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
