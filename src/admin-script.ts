@@ -1349,9 +1349,9 @@ export const ADMIN_HTML = `<!doctype html>
         failedPoints.push({ x, y: Math.max(fy, 200) });
       }
 
-      const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + \`${p.x} ${p.y}\`).join(' ');
-      const areaD = pathD + ` L${points[points.length-1].x} 230 L${points[0].x} 230 Z`;
-      const failedD = failedPoints.map((p, i) => (i === 0 ? 'M' : 'L') + \`${p.x} ${p.y}\`).join(' ');
+      const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + \`\${p.x} \${p.y}\`).join(' ');
+      const areaD = pathD + \` L\${points[points.length-1].x} 230 L\${points[0].x} 230 Z\`;
+      const failedD = failedPoints.map((p, i) => (i === 0 ? 'M' : 'L') + \`\${p.x} \${p.y}\`).join(' ');
 
       const yLabels = [maxVal, Math.round(maxVal * 0.75), Math.round(maxVal * 0.5), Math.round(maxVal * 0.25), 0];
       const yTexts = yLabels.map(v => fmtNum(v));
