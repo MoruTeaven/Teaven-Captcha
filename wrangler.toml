@@ -5,10 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 account_id = "40c5cdd4a50968b4e395ec7a001b9f3f"
 workers_dev = true
 
-[assets]
-directory = "src"
-binding = "ASSETS"
-
 [vars]
 APP_ENV = "production"
 CORS_ORIGIN = ""
