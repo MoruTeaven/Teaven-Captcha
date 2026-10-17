@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Teaven Captcha · 用户面板</title>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+  <style>
+    :root {
+      --bg: #f0f4fa;
+      --surface: rgba(255, 255, 255, 0.82);
+      --surface-solid: #ffffff;
+      --surface-muted: #eef2f7;
+      --surface-hover: #f5f8fc;
+      --border: rgba(30, 58, 95, 0.08);
+      --border-strong: rgba(30, 58, 95, 0.14);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-soft: #94a3b8;
+      --accent: #3777ff;
+      --accent-weak: rgba(55, 119, 255, 0.08);
+      --accent-soft: rgba(55, 119, 255, 0.14);
+      --success: #16a34a;
+      --success-bg: rgba(22, 163, 74, 0.1);
+      --warning: #ca8a04;
+      --warning-bg: rgba(202, 138, 4, 0.12);
+      --error: #dc2626;
+      --error-bg: rgba(220, 38, 38, 0.1);
+      --shadow: 0 14px 40px rgba(30, 58, 95, 0.07);
+      --shadow-soft: 0 8px 24px rgba(30, 58, 95, 0.05);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --sidebar-collapsed: 76px;
+      --topbar-h: 68px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    [data-theme="dark"] {
+      --bg: #0a0f1a;
+      --surface: rgba(17, 24, 39, 0.76);
+      --surface-solid: #0f1623;
+      --surface-muted: #141c2b;
+      --surface-hover: #1a2335;
+      --border: rgba(148, 163, 184, 0.1);
+      --border-strong: rgba(148, 163, 184, 0.16);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-soft: #64748b;
+      --accent: #5b9eff;
+      --accent-weak: rgba(91, 158, 255, 0.1);
+      --accent-soft: rgba(91, 158, 255, 0.16);
+      --success: #4ade80;
+      --success-bg: rgba(74, 222, 128, 0.13);
+      --warning: #facc15;
+      --warning-bg: rgba(250, 204, 21, 0.14);
+      --error: #f87171;
+      --error-bg: rgba(248, 113, 113, 0.13);
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.3);
+      --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .mono { font-family: var(--mono); font-size: 0.85em; }
+    .hidden { display: none !important; }
+
+    /* ===== Auth ===== */
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .auth-card { width: 100%; max-width: 420px; background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 40px 36px; }
+    .auth-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .auth-brand-mark { width: 44px; height: 44px; border-radius: 12px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .auth-brand-text { font-size: 20px; font-weight: 800; }
+    .auth-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
+    .auth-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .auth-tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .auth-tab.is-active { color: var(--accent); border-bottom-color: var(--accent); }
+    .auth-error { color: var(--error); font-size: 13px; min-height: 20px; margin-bottom: 12px; }
+
+    /* ===== Form ===== */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+    .field .req { color: var(--error); }
+    .control { width: 100%; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-solid); color: var(--text); font-size: 14px; font-family: var(--font); transition: border-color 0.2s; }
+    .control:focus { outline: none; border-color: var(--accent); }
+    .control::placeholder { color: var(--text-soft); }
+    select.control { cursor: pointer; }
+
+    /* ===== Button ===== */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-strong); }
+    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
+    .btn-sm { padding: 6px 10px; font-size: 12px; }
+    .btn-block { width: 100%; }
+
+    /* ===== App shell ===== */
+    .app-shell { display: flex; min-height: 100vh; }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: var(--surface-solid); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: width 0.2s; position: sticky; top: 0; height: 100vh; z-index: 100; }
+    .sidebar.is-collapsed { width: var(--sidebar-collapsed); }
+    .sidebar.is-collapsed .nav-text, .sidebar.is-collapsed .brand-text, .sidebar.is-collapsed .user-info { display: none; }
+    .sidebar-head { padding: 20px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+    .brand-mark { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-text { font-weight: 800; font-size: 15px; }
+    .brand-text small { display: block; font-size: 11px; font-weight: 500; color: var(--text-muted); }
+    .sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+    .nav-item:hover { background: var(--surface-hover); color: var(--text); }
+    .nav-item.is-active { background: var(--accent-weak); color: var(--accent); font-weight: 600; }
+    .nav-item i { font-size: 18px; flex-shrink: 0; }
+    .sidebar-foot { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-email { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ===== Main ===== */
+    .main-shell { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { height: var(--topbar-h); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: var(--surface); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 50; }
+    .topbar-left, .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .icon-btn { width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-solid); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.15s; }
+    .icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
+    .crumb { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+    .crumb strong { color: var(--text); }
+    .mobile-menu-btn { display: none; }
+
+    .content { flex: 1; padding: 28px; overflow-x: hidden; }
+    .page { display: none; }
+    .page.is-active { display: block; }
+    .page-head { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .page-title { font-size: 22px; font-weight: 800; }
+    .page-sub { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ===== Cards / Stats ===== */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; }
+    .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-value { font-size: 28px; font-weight: 800; margin: 4px 0; }
+    .stat-foot { font-size: 12px; color: var(--text-soft); }
+
+    .card { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+    .card-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-size: 15px; font-weight: 700; }
+    .card-body { padding: 20px; }
+
+    /* ===== App cards ===== */
+    .app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+    .app-card { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; transition: box-shadow 0.2s; }
+    .app-card:hover { box-shadow: var(--shadow-soft); }
+    .app-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .app-name { font-size: 16px; font-weight: 700; }
+    .app-key { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .app-stats { display: flex; gap: 20px; margin: 12px 0; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .app-stat { }
+    .app-stat-val { font-size: 18px; font-weight: 700; }
+    .app-stat-lbl { font-size: 11px; color: var(--text-soft); }
+    .app-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+    .app-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .domain-tag { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--surface-muted); font-size: 11px; margin: 2px 2px 0 0; }
+
+    /* ===== Badges ===== */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-success { background: var(--success-bg); color: var(--success); }
+    .badge-error { background: var(--error-bg); color: var(--error); }
+    .badge-warning { background: var(--warning-bg); color: var(--warning); }
+    .badge-info { background: var(--accent-weak); color: var(--accent); }
+    .badge-neutral { background: var(--surface-muted); color: var(--text-muted); }
+
+    /* ===== Table ===== */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 14px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ===== Toolbar ===== */
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 10px; }
+    .search-shell { position: relative; }
+    .search-shell i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-soft); font-size: 16px; }
+    .search-shell input { padding-left: 36px; }
+
+    /* ===== Modal ===== */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
+    .modal-backdrop.is-open { opacity: 1; visibility: visible; }
+    .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.96); width: 92%; max-width: 480px; max-height: 88vh; overflow-y: auto; background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); z-index: 201; opacity: 0; visibility: hidden; transition: all 0.2s; }
+    .modal.is-open { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
+    .modal-head { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-body { padding: 24px; }
+    .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+    /* ===== Toast ===== */
+    .toast { position: fixed; bottom: 24px; right: 24px; display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-radius: var(--radius-sm); background: var(--surface-solid); border: 1px solid var(--border); box-shadow: var(--shadow); z-index: 300; opacity: 0; transform: translateY(20px); transition: all 0.25s; max-width: 380px; }
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+    .toast i { font-size: 22px; }
+    .toast strong { font-size: 14px; display: block; }
+    .toast span { font-size: 12px; color: var(--text-muted); }
+
+    /* ===== Empty / Loading ===== */
+    .empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty strong { font-size: 15px; display: block; margin-bottom: 6px; }
+    .empty p { font-size: 13px; color: var(--text-soft); }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== Secret display ===== */
+    .secret-box { background: var(--surface-muted); border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 16px; margin: 12px 0; word-break: break-all; font-family: var(--mono); font-size: 13px; }
+    .secret-warn { color: var(--warning); font-size: 12px; display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+
+    /* ===== Responsive ===== */
+    .mobile-overlay { display: none; }
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); transition: transform 0.25s; }
+      .sidebar.is-open { transform: translateX(0); }
+      .sidebar.is-collapsed { width: var(--sidebar-w); }
+      .mobile-menu-btn { display: flex; }
+      .mobile-overlay { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 99; opacity: 0; visibility: hidden; transition: all 0.2s; }
+      .mobile-overlay.is-open { opacity: 1; visibility: visible; }
+      .content { padding: 16px; }
+      .app-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Auth View ===== -->
+  <div class="auth-wrap" id="authView">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-brand-mark"><i class="ri-shield-check-line"></i></div>
+        <div class="auth-brand-text">Teaven Captcha</div>
+      </div>
+      <p class="auth-subtitle">用户面板 · 管理你的验证码应用</p>
+
+      <div class="auth-tabs">
+        <div class="auth-tab is-active" id="tabLogin">登录</div>
+        <div class="auth-tab" id="tabRegister">注册</div>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label>邮箱</label>
+          <input class="control" type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label>密码</label>
+          <input class="control" type="password" id="loginPassword" placeholder="输入密码" required autocomplete="current-password">
+        </div>
+        <div class="auth-error" id="loginError"></div>
+        <button class="btn btn-primary btn-block" type="submit" id="loginBtn"><i class="ri-login-box-line"></i> 登录</button>
+      </form>
+
+      <form id="registerForm" class="hidden" novalidate>
+        <div class="field">
+          <label>昵称</label>
+          <input class="control" type="text" id="regName" placeholder="你的称呼" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label>邮箱</label>
+          <input class="control" type="email" id="regEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label>密码</label>
+          <input class="control" type="password" id="regPassword" placeholder="至少 8 位" required autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label>确认密码</label>
+          <input class="control" type="password" id="regConfirm" placeholder="再次输入" required autocomplete="new-password">
+        </div>
+        <div class="auth-error" id="regError"></div>
+        <button class="btn btn-primary btn-block" type="submit" id="regBtn"><i class="ri-user-add-line"></i> 注册</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== App View ===== -->
+  <div class="app-shell hidden" id="appView">
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="brand-mark"><i class="ri-shield-check-line"></i></div>
+        <div class="brand-text">Teaven Captcha<small>用户面板</small></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item is-active" data-page="overview"><i class="ri-dashboard-line"></i><span class="nav-text">概览</span></div>
+        <div class="nav-item" data-page="apps"><i class="ri-apps-2-line"></i><span class="nav-text">应用管理</span></div>
+        <div class="nav-item" data-page="logs"><i class="ri-file-list-3-line"></i><span class="nav-text">调用日志</span></div>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">—</div>
+          <div class="user-email" id="userEmail">—</div>
+        </div>
+        <button class="icon-btn" id="logoutBtn" title="退出" aria-label="退出"><i class="ri-logout-box-r-line"></i></button>
+      </div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="菜单"><i class="ri-menu-line"></i></button>
+          <button class="icon-btn" id="collapseBtn" aria-label="折叠"><i class="ri-sidebar-fold-line"></i></button>
+          <div class="crumb" id="crumb"><strong>概览</strong></div>
+        </div>
+        <div class="topbar-right">
+          <button class="icon-btn" id="themeBtn" aria-label="主题"><i class="ri-sun-line"></i></button>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- ===== Overview ===== -->
+        <section class="page is-active" id="page-overview">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">概览</h1>
+              <p class="page-sub">你的验证码应用调用概况</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="refreshOverviewBtn"><i class="ri-refresh-line"></i> 刷新</button>
+          </div>
+          <div class="stat-grid" id="overviewStats"></div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">应用概览</div></div>
+            <div class="card-body" id="overviewApps"></div>
+          </div>
+        </section>
+
+        <!-- ===== Apps ===== -->
+        <section class="page" id="page-apps">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">应用管理</h1>
+              <p class="page-sub">创建和管理你的验证码应用</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="createAppBtn"><i class="ri-add-line"></i> 新建应用</button>
+          </div>
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <div class="search-shell"><i class="ri-search-line"></i><input class="control" type="search" id="appSearch" placeholder="搜索应用名或 key" style="width:240px;"></div>
+              <select class="control" id="appFilter" style="width:auto;"><option value="all">全部状态</option><option value="active">正常</option><option value="disabled">已禁用</option></select>
+            </div>
+          </div>
+          <div class="app-grid" id="appGrid"></div>
+        </section>
+
+        <!-- ===== Logs ===== -->
+        <section class="page" id="page-logs">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">调用日志</h1>
+              <p class="page-sub">查看应用的验证码校验记录</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="refreshLogsBtn"><i class="ri-refresh-line"></i> 刷新</button>
+          </div>
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <select class="control" id="logAppSelect" style="width:auto;min-width:200px;"><option value="">选择应用…</option></select>
+            </div>
+          </div>
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>渠道</th><th>结果</th><th>错误码</th><th>主机名</th><th>耗时</th><th>时间</th></tr></thead>
+                <tbody id="logBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== App Modal ===== -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal" id="appModal">
+    <div class="modal-head">
+      <div class="modal-title" id="appModalTitle">新建应用</div>
+      <button class="icon-btn" id="closeModalBtn" aria-label="关闭"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="appForm" novalidate>
+        <input type="hidden" id="formAppId">
+        <div class="field">
+          <label>应用名称 <span class="req">*</span></label>
+          <input class="control" type="text" id="formName" placeholder="例如：我的网站" required>
+        </div>
+        <div class="field">
+          <label>允许域名（每行一个）</label>
+          <textarea class="control" id="formDomains" rows="3" placeholder="example.com&#10;www.example.com" style="font-family:var(--mono);font-size:13px;resize:vertical;"></textarea>
+        </div>
+        <div class="field">
+          <label>路由策略</label>
+          <select class="control" id="formRoute">
+            <option value="geo_country">智能路由（按地区）</option>
+            <option value="fixed">固定渠道</option>
+            <option value="weighted">权重轮询</option>
+          </select>
+        </div>
+        <div class="field" id="formChannelField" style="display:none;">
+          <label>固定渠道 ID</label>
+          <input class="control" type="text" id="formChannelId" placeholder="pch_xxxxxxxx">
+        </div>
+        <div class="field" id="formStatusField" style="display:none;">
+          <label>状态</label>
+          <select class="control" id="formStatus"><option value="active">启用</option><option value="disabled">禁用</option></select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="cancelAppBtn">取消</button>
+      <button class="btn btn-primary" id="saveAppBtn">保存</button>
+    </div>
+  </div>
+
+  <!-- ===== Secret Modal ===== -->
+  <div class="modal" id="secretModal" style="max-width:420px;">
+    <div class="modal-head">
+      <div class="modal-title">密钥已重置</div>
+      <button class="icon-btn" id="closeSecretBtn" aria-label="关闭"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">新的 secret_key（仅显示一次，请立即保存）：</p>
+      <div class="secret-box" id="secretBox"></div>
+      <div class="secret-warn"><i class="ri-alert-line"></i> 关闭后将无法再次查看</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="copySecretBtn"><i class="ri-file-copy-line"></i> 复制</button>
+      <button class="btn btn-primary" id="doneSecretBtn">已保存</button>
+    </div>
+  </div>
+
+  <!-- ===== Toast ===== -->
+  <div class="toast" id="toast"><i class="ri-checkbox-circle-line"></i><div><strong id="toastTitle">操作成功</strong><span id="toastText"></span></div></div>
+
+  <script>
+  (() => {
+    'use strict';
+    const TOKEN_KEY = 'teaven-user-token';
+    const THEME_KEY = 'teaven-user-theme';
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => document.querySelectorAll(s);
+
+    let currentUser = null;
+    let allApps = [];
+
+    // ===== Theme =====
+    function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(saved || (dark ? 'dark' : 'light'));
+    }
+    function setTheme(mode) {
+      document.documentElement.dataset.theme = mode;
+      localStorage.setItem(THEME_KEY, mode);
+      const i = $('#themeBtn i');
+      if (i) i.className = mode === 'dark' ? 'ri-moon-line' : 'ri-sun-line';
+    }
+
+    // ===== Toast =====
+    let toastTimer;
+    function toast(title, text, type = 'success') {
+      $('#toastTitle').textContent = title;
+      $('#toastText').textContent = text || '';
+      const t = $('#toast');
+      t.className = 'toast is-visible';
+      const i = t.querySelector('i');
+      const icons = { success: 'ri-checkbox-circle-line', error: 'ri-error-warning-line', warning: 'ri-alert-line', info: 'ri-information-line' };
+      i.className = icons[type] || icons.success;
+      i.style.color = type === 'error' ? 'var(--error)' : type === 'warning' ? 'var(--warning)' : type === 'info' ? 'var(--accent)' : 'var(--success)';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('is-visible'), 3000);
+    }
+
+    // ===== API =====
+    async function api(method, path, body) {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      const opts = { method, headers };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      const res = await fetch(path, opts);
+      if (res.status === 401) { logout(); throw new Error('未授权'); }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.message || `请求失败 (${res.status})`);
+      return data;
+    }
+
+    // ===== Auth =====
+    function showAuth() {
+      $('#authView').classList.remove('hidden');
+      $('#appView').classList.add('hidden');
+    }
+    function showApp() {
+      $('#authView').classList.add('hidden');
+      $('#appView').classList.remove('hidden');
+      if (currentUser) {
+        const initials = (currentUser.name || currentUser.email || 'U').substring(0, 2).toUpperCase();
+        $('#userAvatar').textContent = initials;
+        $('#userName').textContent = currentUser.name || '用户';
+        $('#userEmail').textContent = currentUser.email || '';
+      }
+      navigate(location.hash.replace('#', '') || 'overview');
+    }
+    async function checkAuth() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) { showAuth(); return; }
+      try {
+        const data = await api('GET', '/me');
+        currentUser = data.user || data;
+        showApp();
+      } catch { localStorage.removeItem(TOKEN_KEY); showAuth(); }
+    }
+    async function login(email, password) {
+      const btn = $('#loginBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 登录中…';
+      $('#loginError').textContent = '';
+      try {
+        const data = await api('POST', '/auth/login', { email, password });
+        if (data.token) {
+          localStorage.setItem(TOKEN_KEY, data.token);
+          currentUser = data.user;
+          showApp();
+        } else throw new Error('响应缺少 token');
+      } catch (e) { $('#loginError').textContent = e.message; }
+      finally { btn.disabled = false; btn.innerHTML = '<i class="ri-login-box-line"></i> 登录'; }
+    }
+    async function register(name, email, password) {
+      const btn = $('#regBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 注册中…';
+      $('#regError').textContent = '';
+      try {
+        const data = await api('POST', '/auth/register', { name, email, password });
+        if (data.token) {
+          localStorage.setItem(TOKEN_KEY, data.token);
+          currentUser = data.user;
+          toast('注册成功', '欢迎使用 Teaven Captcha');
+          showApp();
+        } else throw new Error('响应缺少 token');
+      } catch (e) { $('#regError').textContent = e.message; }
+      finally { btn.disabled = false; btn.innerHTML = '<i class="ri-user-add-line"></i> 注册'; }
+    }
+    async function logout() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) { try { await api('POST', '/auth/logout'); } catch {} }
+      localStorage.removeItem(TOKEN_KEY);
+      currentUser = null;
+      showAuth();
+    }
+
+    // ===== Router =====
+    const PAGES = ['overview', 'apps', 'logs'];
+    const PAGE_TITLES = { overview: '概览', apps: '应用管理', logs: '调用日志' };
+    function navigate(page) {
+      if (!PAGES.includes(page)) page = 'overview';
+      $$('.page').forEach(p => p.classList.remove('is-active'));
+      $('#page-' + page).classList.add('is-active');
+      $$('.nav-item').forEach(n => n.classList.toggle('is-active', n.dataset.page === page));
+      $('#crumb').innerHTML = `<strong>${PAGE_TITLES[page]}</strong>`;
+      closeMobileNav();
+      if (page === 'overview') loadOverview();
+      if (page === 'apps') loadApps();
+      if (page === 'logs') loadLogSelect();
+    }
+
+    // ===== Format =====
+    const fmtNum = (n) => n == null ? '—' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n);
+    const fmtPct = (n) => n == null ? '—' : (typeof n === 'number' ? n.toFixed(2)+'%' : n);
+    const fmtMs = (n) => n == null ? '—' : Math.round(n)+'ms';
+    const fmtDate = (s) => { if (!s) return '—'; try { return new Date(s).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }); } catch { return s; } };
+    const statusBadge = (s) => s === 'active' ? '<span class="badge badge-success">正常</span>' : s === 'disabled' ? '<span class="badge badge-error">已禁用</span>' : `<span class="badge badge-neutral">${s||'—'}</span>`;
+    const routeLabels = { geo_country: '智能路由', fixed: '固定渠道', weighted: '权重轮询' };
+    const providerNames = { turnstile: 'Turnstile', geetest: 'Geetest', recaptcha: 'reCAPTCHA', hcaptcha: 'hCaptcha' };
+
+    // ===== Overview =====
+    async function loadOverview() {
+      const statsEl = $('#overviewStats');
+      const appsEl = $('#overviewApps');
+      statsEl.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+      appsEl.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+      try {
+        const data = await api('GET', '/apps');
+        allApps = data.apps || [];
+        if (!allApps.length) {
+          statsEl.innerHTML = '<div class="stat-card"><div class="stat-label">应用总数</div><div class="stat-value">0</div><div class="stat-foot">点击「应用管理」创建</div></div><div class="stat-card"><div class="stat-label">今日调用量</div><div class="stat-value">—</div></div><div class="stat-card"><div class="stat-label">今日成功率</div><div class="stat-value">—</div></div>';
+          appsEl.innerHTML = '<div class="empty"><strong>还没有应用</strong><p>前往「应用管理」创建你的第一个验证码应用</p></div>';
+          return;
+        }
+        const stats = await Promise.all(allApps.map(a => api('GET', `/apps/${a.id}/stats`).catch(() => null)));
+        let total = 0, successTotal = 0, failedTotal = 0;
+        const latencies = [];
+        const combined = allApps.map((a, i) => {
+          const s = stats[i]?.stats || {};
+          total += s.total || 0;
+          successTotal += s.success_total || 0;
+          failedTotal += s.failed_total || 0;
+          if (s.avg_latency_ms) latencies.push(s.avg_latency_ms);
+          return { ...a, stats: s };
+        });
+        const successRate = total > 0 ? (successTotal / total * 100) : 100;
+        const avgLatency = latencies.length ? latencies.reduce((a, b) => a + b, 0) / latencies.length : 0;
+        statsEl.innerHTML = `
+          <div class="stat-card"><div class="stat-label">应用总数</div><div class="stat-value">${allApps.length}</div><div class="stat-foot">正常 ${allApps.filter(a => a.status === 'active').length} · 禁用 ${allApps.filter(a => a.status === 'disabled').length}</div></div>
+          <div class="stat-card"><div class="stat-label">总调用量</div><div class="stat-value">${fmtNum(total)}</div><div class="stat-foot">成功 ${fmtNum(successTotal)} · 失败 ${fmtNum(failedTotal)}</div></div>
+          <div class="stat-card"><div class="stat-label">成功率</div><div class="stat-value">${fmtPct(successRate)}</div><div class="stat-foot">综合表现</div></div>
+          <div class="stat-card"><div class="stat-label">平均耗时</div><div class="stat-value">${fmtMs(avgLatency)}</div><div class="stat-foot">跨应用均值</div></div>
+        `;
+        combined.sort((a, b) => (b.stats.total || 0) - (a.stats.total || 0));
+        appsEl.innerHTML = combined.map(a => `
+          <div class="app-card" style="margin-bottom:12px;">
+            <div class="app-card-top">
+              <div><div class="app-name">${a.name || '—'}</div><div class="app-key mono">${a.site_key || ''}</div></div>
+              ${statusBadge(a.status)}
+            </div>
+            <div class="app-stats">
+              <div class="app-stat"><div class="app-stat-val">${fmtNum(a.stats.total)}</div><div class="app-stat-lbl">调用</div></div>
+              <div class="app-stat"><div class="app-stat-val">${fmtPct(a.stats.total > 0 ? (a.stats.success_total / a.stats.total * 100) : 100)}</div><div class="app-stat-lbl">成功率</div></div>
+              <div class="app-stat"><div class="app-stat-val">${fmtMs(a.stats.avg_latency_ms)}</div><div class="app-stat-lbl">耗时</div></div>
+            </div>
+            <div class="app-meta">${routeLabels[a.route_strategy] || a.route_strategy || '—'} · 创建于 ${fmtDate(a.created_at)}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        statsEl.innerHTML = `<div class="empty" style="color:var(--error);">加载失败: ${e.message}</div>`;
+        appsEl.innerHTML = '';
+      }
+    }
+
+    // ===== Apps =====
+    async function loadApps() {
+      const grid = $('#appGrid');
+      grid.innerHTML = '<div class="empty"><span class="spinner"></span> 加载中…</div>';
+      try {
+        const data = await api('GET', '/apps');
+        allApps = data.apps || [];
+        renderApps();
+      } catch (e) { grid.innerHTML = `<div class="empty" style="color:var(--error);">加载失败: ${e.message}</div>`; }
+    }
+    function renderApps() {
+      const kw = ($('#appSearch').value || '').trim().toLowerCase();
+      const sf = $('#appFilter').value;
+      let list = allApps;
+      if (sf !== 'all') list = list.filter(a => a.status === sf);
+      if (kw) list = list.filter(a => [a.name, a.site_key].join(' ').toLowerCase().includes(kw));
+      const grid = $('#appGrid');
+      if (!list.length) { grid.innerHTML = '<div class="empty"><strong>暂无应用</strong><p>点击「新建应用」创建</p></div>'; return; }
+      grid.innerHTML = list.map(a => {
+        const domains = (() => { try { return JSON.parse(a.allowed_domains || '[]'); } catch { return []; } })();
+        return `<div class="app-card">
+          <div class="app-card-top">
+            <div><div class="app-name">${a.name || '—'}</div><div class="app-key mono">${a.site_key || ''}</div></div>
+            ${statusBadge(a.status)}
+          </div>
+          <div class="app-stats">
+            <div class="app-stat"><div class="app-stat-val">${routeLabels[a.route_strategy] || a.route_strategy || '—'}</div><div class="app-stat-lbl">路由策略</div></div>
+            <div class="app-stat"><div class="app-stat-val mono">${a.secret_key_hint || '—'}</div><div class="app-stat-lbl">密钥尾缀</div></div>
+          </div>
+          <div class="app-meta">${domains.length ? domains.map(d => `<span class="domain-tag">${d}</span>`).join('') : '无域名限制'} · ${fmtDate(a.created_at)}</div>
+          <div class="app-actions">
+            <button class="btn btn-ghost btn-sm" onclick="window.__editApp('${a.id}')"><i class="ri-edit-line"></i> 编辑</button>
+            <button class="btn btn-ghost btn-sm" onclick="window.__toggleApp('${a.id}')"><i class="ri-toggle-line"></i> ${a.status === 'active' ? '禁用' : '启用'}</button>
+            <button class="btn btn-ghost btn-sm" onclick="window.__resetSecret('${a.id}')"><i class="ri-key-line"></i> 重置密钥</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    function openAppModal(app) {
+      $('#appModalTitle').textContent = app ? '编辑应用' : '新建应用';
+      $('#formAppId').value = app ? app.id : '';
+      $('#formName').value = app ? app.name : '';
+      let domains = [];
+      try { domains = JSON.parse(app?.allowed_domains || '[]'); } catch {}
+      $('#formDomains').value = domains.join('\n');
+      $('#formRoute').value = app ? app.route_strategy : 'geo_country';
+      $('#formChannelId').value = app?.provider_channel_id || '';
+      $('#formStatus').value = app ? app.status : 'active';
+      $('#formChannelField').style.display = (app ? app.route_strategy : 'geo_country') === 'fixed' ? '' : 'none';
+      $('#formStatusField').style.display = app ? '' : 'none';
+      $('#appModal').classList.add('is-open');
+      $('#modalBackdrop').classList.add('is-open');
+    }
+    function closeAppModal() {
+      $('#appModal').classList.remove('is-open');
+      $('#modalBackdrop').classList.remove('is-open');
+    }
+    async function saveApp() {
+      const id = $('#formAppId').value;
+      const name = $('#formName').value.trim();
+      if (!name) { toast('请填写应用名称', '', 'warning'); return; }
+      const domains = $('#formDomains').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const route = $('#formRoute').value;
+      const body = { name, allowed_domains: domains, route_strategy: route };
+      if (route === 'fixed') body.provider_channel_id = $('#formChannelId').value.trim() || null;
+      if (id) body.status = $('#formStatus').value;
+      try {
+        if (id) {
+          await api('PATCH', '/apps/' + id, body);
+          toast('应用已更新', name);
+        } else {
+          const data = await api('POST', '/apps', body);
+          if (data.secret_key) {
+            closeAppModal();
+            $('#secretBox').textContent = data.secret_key;
+            $('#secretModal').classList.add('is-open');
+            $('#modalBackdrop').classList.add('is-open');
+          } else {
+            closeAppModal();
+            toast('应用已创建', name);
+          }
+        }
+        if (!id || !$('#formAppId').value) { closeAppModal(); }
+        await loadApps();
+      } catch (e) { toast('操作失败', e.message, 'error'); }
+    }
+    window.__editApp = (id) => { const a = allApps.find(x => x.id === id); if (a) openAppModal(a); };
+    window.__toggleApp = async (id) => {
+      const a = allApps.find(x => x.id === id);
+      if (!a) return;
+      const ns = a.status === 'active' ? 'disabled' : 'active';
+      try { await api('PATCH', '/apps/' + id, { status: ns }); toast('状态已切换', `${a.name} → ${ns === 'active' ? '启用' : '禁用'}`); await loadApps(); }
+      catch (e) { toast('操作失败', e.message, 'error'); }
+    };
+    window.__resetSecret = async (id) => {
+      const a = allApps.find(x => x.id === id);
+      if (!a) return;
+      if (!confirm(`确定重置「${a.name}」的密钥？旧密钥将立即失效。`)) return;
+      try {
+        const data = await api('POST', '/apps/' + id + '/reset-secret');
+        $('#secretBox').textContent = data.secret_key;
+        $('#secretModal').classList.add('is-open');
+        $('#modalBackdrop').classList.add('is-open');
+        toast('密钥已重置', '请立即保存新密钥', 'warning');
+        await loadApps();
+      } catch (e) { toast('重置失败', e.message, 'error'); }
+    };
+
+    // ===== Logs =====
+    async function loadLogSelect() {
+      const sel = $('#logAppSelect');
+      if (sel.options.length > 1) return;
+      try {
+        const data = await api('GET', '/apps');
+        (data.apps || []).forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.id; opt.textContent = a.name || a.id;
+          sel.appendChild(opt);
+        });
+      } catch {}
+    }
+    async function loadLogs(appId) {
+      const body = $('#logBody');
+      if (!appId) { body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">请先选择应用</td></tr>'; return; }
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);"><span class="spinner"></span> 加载中…</td></tr>';
+      try {
+        const data = await api('GET', '/apps/' + appId + '/logs');
+        const logs = data.logs || [];
+        if (!logs.length) { body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">暂无日志</td></tr>'; return; }
+        body.innerHTML = logs.map(l => `<tr>
+          <td><span class="badge badge-info">${providerNames[l.provider] || l.provider || '—'}</span></td>
+          <td>${l.success ? '<span class="badge badge-success">成功</span>' : '<span class="badge badge-error">失败</span>'}</td>
+          <td class="mono">${l.error_code || '—'}</td>
+          <td class="mono">${l.hostname || '—'}</td>
+          <td>${l.latency_ms != null ? l.latency_ms + 'ms' : '—'}</td>
+          <td>${fmtDate(l.created_at)}</td>
+        </tr>`).join('');
+      } catch (e) { body.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--error);">加载失败: ${e.message}</td></tr>`; }
+    }
+
+    // ===== Mobile nav =====
+    function openMobileNav() { $('#sidebar').classList.add('is-open'); $('#mobileOverlay').classList.add('is-open'); }
+    function closeMobileNav() { $('#sidebar').classList.remove('is-open'); $('#mobileOverlay').classList.remove('is-open'); }
+
+    // ===== Events =====
+    function bind() {
+      // Auth tabs
+      $('#tabLogin').addEventListener('click', () => {
+        $('#tabLogin').classList.add('is-active'); $('#tabRegister').classList.remove('is-active');
+        $('#loginForm').classList.remove('hidden'); $('#registerForm').classList.add('hidden');
+      });
+      $('#tabRegister').addEventListener('click', () => {
+        $('#tabRegister').classList.add('is-active'); $('#tabLogin').classList.remove('is-active');
+        $('#registerForm').classList.remove('hidden'); $('#loginForm').classList.add('hidden');
+      });
+      $('#loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = $('#loginEmail').value.trim(), pw = $('#loginPassword').value;
+        if (!email || !pw) { $('#loginError').textContent = '请填写邮箱和密码'; return; }
+        login(email, pw);
+      });
+      $('#registerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = $('#regName').value.trim(), email = $('#regEmail').value.trim();
+        const pw = $('#regPassword').value, cf = $('#regConfirm').value;
+        if (!name || !email || !pw) { $('#regError').textContent = '请填写所有字段'; return; }
+        if (pw.length < 8) { $('#regError').textContent = '密码至少 8 位'; return; }
+        if (pw !== cf) { $('#regError').textContent = '两次密码不一致'; return; }
+        register(name, email, pw);
+      });
+
+      // Nav
+      $$('.nav-item').forEach(n => n.addEventListener('click', () => navigate(n.dataset.page)));
+      window.addEventListener('hashchange', () => navigate(location.hash.replace('#', '') || 'overview'));
+      $('#logoutBtn').addEventListener('click', logout);
+      $('#themeBtn').addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+      $('#collapseBtn').addEventListener('click', () => $('#sidebar').classList.toggle('is-collapsed'));
+      $('#mobileMenuBtn').addEventListener('click', openMobileNav);
+      $('#mobileOverlay').addEventListener('click', closeMobileNav);
+
+      // Overview
+      $('#refreshOverviewBtn').addEventListener('click', async () => { await loadOverview(); toast('已刷新', '概览数据已更新'); });
+
+      // Apps
+      $('#createAppBtn').addEventListener('click', () => openAppModal(null));
+      $('#closeModalBtn').addEventListener('click', closeAppModal);
+      $('#cancelAppBtn').addEventListener('click', closeAppModal);
+      $('#modalBackdrop').addEventListener('click', () => { closeAppModal(); $('#secretModal').classList.remove('is-open'); });
+      $('#saveAppBtn').addEventListener('click', saveApp);
+      $('#appSearch').addEventListener('input', renderApps);
+      $('#appFilter').addEventListener('change', renderApps);
+      $('#formRoute').addEventListener('change', (e) => { $('#formChannelField').style.display = e.target.value === 'fixed' ? '' : 'none'; });
+
+      // Secret modal
+      $('#closeSecretBtn').addEventListener('click', () => { $('#secretModal').classList.remove('is-open'); if (!$('#appModal').classList.contains('is-open')) $('#modalBackdrop').classList.remove('is-open'); });
+      $('#doneSecretBtn').addEventListener('click', () => { $('#secretModal').classList.remove('is-open'); $('#modalBackdrop').classList.remove('is-open'); });
+      $('#copySecretBtn').addEventListener('click', () => {
+        const text = $('#secretBox').textContent;
+        navigator.clipboard.writeText(text).then(() => toast('已复制', '密钥已复制到剪贴板')).catch(() => toast('复制失败', '请手动选择复制', 'warning'));
+      });
+
+      // Logs
+      $('#logAppSelect').addEventListener('change', (e) => loadLogs(e.target.value));
+      $('#refreshLogsBtn').addEventListener('click', () => loadLogs($('#logAppSelect').value));
+
+      // Keyboard
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAppModal(); $('#secretModal').classList.remove('is-open'); closeMobileNav(); } });
+    }
+
+    // ===== Init =====
+    initTheme();
+    bind();
+    checkAuth();
+  })();
+  </script>
+</body>
+</html>

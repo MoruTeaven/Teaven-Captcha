@@ -1,5 +1,6 @@
 import { CLIENT_SCRIPT } from './client-script';
 import { ADMIN_HTML } from './admin-script';
+import { USER_HTML } from './user-script';
 import {
   ApiError,
   assertString,
@@ -68,6 +69,15 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
 
   if (request.method === 'GET' && (pathname === '/admin' || pathname === '/admin/')) {
     return new Response(ADMIN_HTML, {
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'public, max-age=300',
+      },
+    });
+  }
+
+  if (request.method === 'GET' && (pathname === '/dashboard' || pathname === '/dashboard/')) {
+    return new Response(USER_HTML, {
       headers: {
         'content-type': 'text/html; charset=utf-8',
         'cache-control': 'public, max-age=300',

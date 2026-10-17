@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "wrangler dev --local",
     "deploy": "wrangler deploy",
-    "build": "node scripts/build-admin.js",
+    "build": "node scripts/build.js",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply teaven-captcha --local",
     "db:migrate:remote": "wrangler d1 migrations apply teaven-captcha --remote"
