@@ -570,11 +570,12 @@ export const USER_HTML = `<!doctype html>
     }
 
     // ===== Format =====
+    const esc = (s) => { if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
     const fmtNum = (n) => n == null ? '—' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n);
     const fmtPct = (n) => n == null ? '—' : (typeof n === 'number' ? n.toFixed(2)+'%' : n);
     const fmtMs = (n) => n == null ? '—' : Math.round(n)+'ms';
     const fmtDate = (s) => { if (!s) return '—'; try { return new Date(s).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }); } catch { return s; } };
-    const statusBadge = (s) => s === 'active' ? '<span class="badge badge-success">正常</span>' : s === 'disabled' ? '<span class="badge badge-error">已禁用</span>' : \`<span class="badge badge-neutral">\${s||'—'}</span>\`;
+    const statusBadge = (s) => s === 'active' ? '<span class="badge badge-success">正常</span>' : s === 'disabled' ? '<span class="badge badge-error">已禁用</span>' : \`<span class="badge badge-neutral">\${esc(s)||'—'}</span>\`;
     const routeLabels = { geo_country: '智能路由', fixed: '固定渠道', weighted: '权重轮询' };
     const providerNames = { turnstile: 'Turnstile', geetest: 'Geetest', recaptcha: 'reCAPTCHA', hcaptcha: 'hCaptcha' };
 
@@ -615,7 +616,7 @@ export const USER_HTML = `<!doctype html>
         appsEl.innerHTML = combined.map(a => \`
           <div class="app-card" style="margin-bottom:12px;">
             <div class="app-card-top">
-              <div><div class="app-name">\${a.name || '—'}</div><div class="app-key mono">\${a.site_key || ''}</div></div>
+              <div><div class="app-name">\${esc(a.name) || '—'}</div><div class="app-key mono">\${esc(a.site_key) || ''}</div></div>
               \${statusBadge(a.status)}
             </div>
             <div class="app-stats">
@@ -623,7 +624,7 @@ export const USER_HTML = `<!doctype html>
               <div class="app-stat"><div class="app-stat-val">\${fmtPct(a.stats.total > 0 ? (a.stats.success_total / a.stats.total * 100) : 100)}</div><div class="app-stat-lbl">成功率</div></div>
               <div class="app-stat"><div class="app-stat-val">\${fmtMs(a.stats.avg_latency_ms)}</div><div class="app-stat-lbl">耗时</div></div>
             </div>
-            <div class="app-meta">\${routeLabels[a.route_strategy] || a.route_strategy || '—'} · 创建于 \${fmtDate(a.created_at)}</div>
+            <div class="app-meta">\${routeLabels[a.route_strategy] || esc(a.route_strategy) || '—'} · 创建于 \${fmtDate(a.created_at)}</div>
           </div>
         \`).join('');
       } catch (e) {
@@ -654,14 +655,14 @@ export const USER_HTML = `<!doctype html>
         const domains = (() => { try { return JSON.parse(a.allowed_domains || '[]'); } catch { return []; } })();
         return \`<div class="app-card">
           <div class="app-card-top">
-            <div><div class="app-name">\${a.name || '—'}</div><div class="app-key mono">\${a.site_key || ''}</div></div>
+            <div><div class="app-name">\${esc(a.name) || '—'}</div><div class="app-key mono">\${esc(a.site_key) || ''}</div></div>
             \${statusBadge(a.status)}
           </div>
           <div class="app-stats">
-            <div class="app-stat"><div class="app-stat-val">\${routeLabels[a.route_strategy] || a.route_strategy || '—'}</div><div class="app-stat-lbl">路由策略</div></div>
-            <div class="app-stat"><div class="app-stat-val mono">\${a.secret_key_hint || '—'}</div><div class="app-stat-lbl">密钥尾缀</div></div>
+            <div class="app-stat"><div class="app-stat-val">\${routeLabels[a.route_strategy] || esc(a.route_strategy) || '—'}</div><div class="app-stat-lbl">路由策略</div></div>
+            <div class="app-stat"><div class="app-stat-val mono">\${esc(a.secret_key_hint) || '—'}</div><div class="app-stat-lbl">密钥尾缀</div></div>
           </div>
-          <div class="app-meta">\${domains.length ? domains.map(d => \`<span class="domain-tag">\${d}</span>\`).join('') : '无域名限制'} · \${fmtDate(a.created_at)}</div>
+          <div class="app-meta">\${domains.length ? domains.map(d => \`<span class="domain-tag">\${esc(d)}</span>\`).join('') : '无域名限制'} · \${fmtDate(a.created_at)}</div>
           <div class="app-actions">
             <button class="btn btn-ghost btn-sm" onclick="window.__editApp('\${a.id}')"><i class="ri-edit-line"></i> 编辑</button>
             <button class="btn btn-ghost btn-sm" onclick="window.__toggleApp('\${a.id}')"><i class="ri-toggle-line"></i> \${a.status === 'active' ? '禁用' : '启用'}</button>
@@ -762,10 +763,10 @@ export const USER_HTML = `<!doctype html>
         const logs = data.logs || [];
         if (!logs.length) { body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">暂无日志</td></tr>'; return; }
         body.innerHTML = logs.map(l => \`<tr>
-          <td><span class="badge badge-info">\${providerNames[l.provider] || l.provider || '—'}</span></td>
+          <td><span class="badge badge-info">\${providerNames[l.provider] || esc(l.provider) || '—'}</span></td>
           <td>\${l.success ? '<span class="badge badge-success">成功</span>' : '<span class="badge badge-error">失败</span>'}</td>
-          <td class="mono">\${l.error_code || '—'}</td>
-          <td class="mono">\${l.hostname || '—'}</td>
+          <td class="mono">\${esc(l.error_code) || '—'}</td>
+          <td class="mono">\${esc(l.hostname) || '—'}</td>
           <td>\${l.latency_ms != null ? l.latency_ms + 'ms' : '—'}</td>
           <td>\${fmtDate(l.created_at)}</td>
         </tr>\`).join('');

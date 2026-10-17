@@ -1058,6 +1058,7 @@ export const ADMIN_HTML = `<!doctype html>
     // === DOM refs ===
     const \$ = (sel) => document.querySelector(sel);
     const \$\$ = (sel) => document.querySelectorAll(sel);
+    function esc(s) { if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
     const setupView = \$('#setupView');
     const loginView = \$('#loginView');
@@ -1281,10 +1282,10 @@ export const ADMIN_HTML = `<!doctype html>
     function statusBadge(s) {
       if (s === 'active') return '<span class="badge success">正常</span>';
       if (s === 'disabled') return '<span class="badge error">已禁用</span>';
-      return '<span class="badge neutral">' + (s || '—') + '</span>';
+      return '<span class="badge neutral">' + (esc(s)||'—') + '</span>';
     }
     const routeLabels = { geo_country: '智能路由', fixed: '固定渠道', weighted: '权重轮询' };
-    function routeBadge(r) { return '<span class="badge neutral">' + (routeLabels[r] || r || '—') + '</span>'; }
+    function routeBadge(r) { return '<span class="badge neutral">' + (routeLabels[r] || esc(r) || '—') + '</span>'; }
     const providerIcons = { turnstile: 'ri-cloud-line', geetest: 'ri-fingerprint-line', recaptcha: 'ri-google-line', hcaptcha: 'ri-shield-line' };
     const providerNames = { turnstile: 'Turnstile', geetest: 'Geetest', recaptcha: 'reCAPTCHA', hcaptcha: 'hCaptcha' };
 
@@ -1383,11 +1384,11 @@ export const ADMIN_HTML = `<!doctype html>
       container.innerHTML = byProvider.map(p => {
         const pct = ((p.total || 0) / total * 100).toFixed(1);
         const icon = providerIcons[p.provider] || 'ri-cloud-line';
-        const name = providerNames[p.provider] || p.provider;
+        const name = providerNames[p.provider] || esc(p.provider);
         return \`<div class="channel-item">
           <div class="item-main">
             <div class="item-icon"><i class="\${icon}"></i></div>
-            <div><div class="item-title">\${name}</div><div class="item-meta">\${pct}% · 成功率 \${fmtPct(p.success_rate)}</div></div>
+            <div><div class="item-title">\${esc(name)}</div><div class="item-meta">\${esc(pct)}% · 成功率 \${fmtPct(p.success_rate)}</div></div>
           </div>
           <span class="badge \${p.success_rate >= 95 ? 'success' : p.success_rate >= 80 ? 'warning' : 'error'}">\${fmtNum(p.total)}</span>
         </div>\`;
@@ -1401,8 +1402,8 @@ export const ADMIN_HTML = `<!doctype html>
         return;
       }
       tbody.innerHTML = topApps.map(app => \`<tr>
-        <td><div class="item-title">\${app.name || '—'}</div><div class="mono">\${app.key || ''}</div></td>
-        <td>\${app.user || '—'}</td>
+        <td><div class="item-title">\${esc(app.name) || '—'}</div><div class="mono">\${esc(app.key) || ''}</div></td>
+        <td>\${esc(app.user) || '—'}</td>
         <td><strong>\${fmtNum(app.calls)}</strong></td>
         <td>\${fmtPct(app.success_rate)}</td>
         <td>\${fmtMs(app.avg_latency_ms)}</td>
@@ -1478,7 +1479,7 @@ export const ADMIN_HTML = `<!doctype html>
         allChannels = data.provider_channels || data.channels || [];
         renderChannels();
       } catch (err) {
-        tbody.innerHTML = \`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${err.message}</td></tr>\`;
+        tbody.innerHTML = \`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${esc(err.message)}</td></tr>\`;
       }
     }
 
@@ -1489,12 +1490,12 @@ export const ADMIN_HTML = `<!doctype html>
         return;
       }
       tbody.innerHTML = allChannels.map(ch => \`<tr>
-        <td><span class="badge info">\${providerNames[ch.provider] || ch.provider}</span></td>
-        <td><strong>\${ch.name || '—'}</strong></td>
+        <td><span class="badge info">\${providerNames[ch.provider] || esc(ch.provider)}</span></td>
+        <td><strong>\${esc(ch.name) || '—'}</strong></td>
         <td>\${statusBadge(ch.status)}</td>
-        <td>\${ch.weight ?? '—'}</td>
-        <td>\${ch.priority ?? '—'}</td>
-        <td>\${ch.timeout_ms ?? '—'}</td>
+        <td>\${esc(ch.weight ?? '—')}</td>
+        <td>\${esc(ch.priority ?? '—')}</td>
+        <td>\${esc(ch.timeout_ms ?? '—')}</td>
         <td>\${fmtDate(ch.created_at)}</td>
         <td>
           <div style="display:flex;gap:6px;">
@@ -1585,7 +1586,7 @@ export const ADMIN_HTML = `<!doctype html>
         allApps = data.apps || [];
         renderApps();
       } catch (err) {
-        tbody.innerHTML = \`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${err.message}</td></tr>\`;
+        tbody.innerHTML = \`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${esc(err.message)}</td></tr>\`;
       }
     }
 
@@ -1602,12 +1603,12 @@ export const ADMIN_HTML = `<!doctype html>
         return;
       }
       tbody.innerHTML = filtered.map(app => \`<tr>
-        <td><strong>\${app.name || '—'}</strong></td>
-        <td>\${app.user_email || '—'}</td>
-        <td><span class="mono">\${app.site_key || '—'}</span></td>
+        <td><strong>\${esc(app.name) || '—'}</strong></td>
+        <td>\${esc(app.user_email) || '—'}</td>
+        <td><span class="mono">\${esc(app.site_key) || '—'}</span></td>
         <td>\${statusBadge(app.status)}</td>
         <td>\${routeBadge(app.route_strategy)}</td>
-        <td>\${fmtDate(app.created_at)}</td>
+        <td>\${esc(fmtDate(app.created_at))}</td>
         <td>
           <div style="display:flex;gap:6px;">
             <button class="button ghost sm" onclick="window.__toggleAppStatus(\${app.id})"><i class="ri-toggle-line"></i></button>
@@ -1636,7 +1637,7 @@ export const ADMIN_HTML = `<!doctype html>
         allUsers = data.users || [];
         renderUsers();
       } catch (err) {
-        tbody.innerHTML = \`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${err.message}</td></tr>\`;
+        tbody.innerHTML = \`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${esc(err.message)}</td></tr>\`;
       }
     }
 
@@ -1647,11 +1648,11 @@ export const ADMIN_HTML = `<!doctype html>
         return;
       }
       tbody.innerHTML = allUsers.map(u => \`<tr>
-        <td>\${u.email || '—'}</td>
-        <td>\${u.name || '—'}</td>
-        <td><span class="badge \${u.role === 'admin' ? 'info' : 'neutral'}">\${u.role || 'user'}</span></td>
+        <td>\${esc(u.email) || '—'}</td>
+        <td>\${esc(u.name) || '—'}</td>
+        <td><span class="badge \${u.role === 'admin' ? 'info' : 'neutral'}">\${esc(u.role) || 'user'}</span></td>
         <td>\${statusBadge(u.status)}</td>
-        <td>\${fmtDate(u.created_at)}</td>
+        <td>\${esc(fmtDate(u.created_at))}</td>
       </tr>\`).join('');
     }
 
@@ -1670,7 +1671,7 @@ export const ADMIN_HTML = `<!doctype html>
         \$('#analyticsProviderBreakdown').innerHTML = byProvider.length ? byProvider.map(p => {
           const pct = ((p.total || 0) / maxProviderTotal * 100).toFixed(0);
           return \`<div class="stat-bar-row">
-            <div class="stat-bar-label">\${providerNames[p.provider] || p.provider}</div>
+            <div class="stat-bar-label">\${providerNames[p.provider] || esc(p.provider)}</div>
             <div class="stat-bar-track"><div class="stat-bar-fill" style="width:\${pct}%"></div></div>
             <div class="stat-bar-value">\${fmtNum(p.total)}</div>
           </div>\`;
@@ -1681,7 +1682,7 @@ export const ADMIN_HTML = `<!doctype html>
         \$('#analyticsTopApps').innerHTML = topApps.length ? topApps.map(a => {
           const pct = ((a.calls || 0) / maxAppCalls * 100).toFixed(0);
           return \`<div class="stat-bar-row">
-            <div class="stat-bar-label" title="\${a.name || ''}">\${(a.name || '—').substring(0, 10)}</div>
+            <div class="stat-bar-label" title="\${esc(a.name) || ''}">\${esc((a.name || '—').substring(0, 10))}</div>
             <div class="stat-bar-track"><div class="stat-bar-fill" style="width:\${pct}%"></div></div>
             <div class="stat-bar-value">\${fmtNum(a.calls)}</div>
           </div>\`;
@@ -1723,15 +1724,15 @@ export const ADMIN_HTML = `<!doctype html>
           return;
         }
         tbody.innerHTML = logs.map(log => \`<tr>
-          <td><span class="badge info">\${providerNames[log.provider] || log.provider || '—'}</span></td>
+          <td><span class="badge info">\${providerNames[log.provider] || esc(log.provider) || '—'}</span></td>
           <td>\${log.success ? '<span class="badge success">成功</span>' : '<span class="badge error">失败</span>'}</td>
-          <td><span class="mono">\${log.error_code || '—'}</span></td>
-          <td><span class="mono">\${log.hostname || '—'}</span></td>
-          <td>\${log.latency_ms != null ? log.latency_ms : '—'}</td>
-          <td>\${fmtDate(log.created_at)}</td>
+          <td><span class="mono">\${esc(log.error_code) || '—'}</span></td>
+          <td><span class="mono">\${esc(log.hostname) || '—'}</span></td>
+          <td>\${esc(log.latency_ms != null ? log.latency_ms : '—')}</td>
+          <td>\${esc(fmtDate(log.created_at))}</td>
         </tr>\`).join('');
       } catch (err) {
-        tbody.innerHTML = \`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${err.message}</td></tr>\`;
+        tbody.innerHTML = \`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--error);">加载失败: \${esc(err.message)}</td></tr>\`;
       }
     }
 
