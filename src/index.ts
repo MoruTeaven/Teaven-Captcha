@@ -719,7 +719,11 @@ async function handleCreateChallenge(request: Request, env: Env): Promise<Respon
   const siteKey = assertString(body.site_key, 'site_key', { min: 1, max: 100 });
   const action = optionalString(body.action, 'action', 100);
   const originHostname = getOriginHostname(request);
-  const hostname = normalizeHostname(optionalString(body.hostname, 'hostname', 255) || originHostname || '');
+  const bodyHostname = normalizeHostname(optionalString(body.hostname, 'hostname', 255) || '');
+  const hostname = originHostname || bodyHostname;
+  if (!hostname) {
+    throw new ApiError(403, 'origin_required', 'Origin or Referer header is required.');
+  }
   const country = getCountry(request);
 
   const app = await env.DB.prepare('SELECT * FROM apps WHERE site_key = ?').bind(siteKey).first<AppRow>();
